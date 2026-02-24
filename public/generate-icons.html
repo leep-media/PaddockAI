@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generer Ikoner</title>
+    <style>
+        body { background: #111; color: white; font-family: sans-serif; text-align: center; padding: 40px; }
+        canvas { background: #000; border: 1px solid #333; margin: 20px; border-radius: 12px; }
+        .controls { margin-bottom: 20px; }
+        .download-link { display: inline-block; background: #0a84ff; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Ikon Generator</h1>
+    <p>Højreklik på billederne og vælg "Gem billede som..."</p>
+    
+    <div id="canvases"></div>
+
+    <script>
+        const sizes = [192, 512];
+        const container = document.getElementById('canvases');
+
+        function drawHorse(ctx, size) {
+            const scale = size / 38;
+            
+            // Background
+            ctx.fillStyle = "#0a84ff";
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, 9 * scale);
+            ctx.fill();
+
+            // Horse head (white)
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            // Scaling the SVG path values
+            const p = (v) => v * scale;
+            
+            ctx.moveTo(p(11), p(28));
+            ctx.lineTo(p(11), p(22));
+            ctx.bezierCurveTo(p(11), p(18), p(13), p(15), p(15), p(13));
+            ctx.lineTo(p(14), p(11));
+            ctx.bezierCurveTo(p(14), p(10), p(15), p(9), p(16), p(9));
+            ctx.lineTo(p(17), p(10));
+            ctx.bezierCurveTo(p(18), p(9), p(19), p(8.5), p(20), p(8.5));
+            ctx.bezierCurveTo(p(21), p(8.5), p(22), p(9), p(22.5), p(10));
+            ctx.lineTo(p(24), p(9));
+            ctx.bezierCurveTo(p(24.5), p(8.8), p(25), p(9), p(25), p(9.5));
+            ctx.lineTo(p(24), p(11));
+            ctx.bezierCurveTo(p(25), p(12), p(26), p(14), p(26), p(16));
+            ctx.lineTo(p(26), p(18));
+            ctx.bezierCurveTo(p(27), p(18.5), p(27.5), p(19), p(27.5), p(20));
+            ctx.bezierCurveTo(p(27.5), p(21), p(27), p(21.5), p(26), p(22));
+            ctx.lineTo(p(26), p(28));
+            ctx.closePath();
+            ctx.fill();
+
+            // Eye
+            ctx.fillStyle = "#0a84ff";
+            ctx.beginPath();
+            ctx.arc(p(20), p(13), p(1.2), 0, Math.PI * 2);
+            ctx.fill();
+
+            // Nostril
+            ctx.beginPath();
+            ctx.arc(p(15), p(18.5), p(0.8), 0, Math.PI * 2);
+            ctx.fill();
+
+            // Mane lines
+            ctx.strokeStyle = "#0a84ff";
+            ctx.lineWidth = 0.8 * scale;
+            ctx.lineCap = "round";
+            
+            ctx.beginPath();
+            ctx.moveTo(p(22), p(10));
+            ctx.quadraticCurveTo(p(23), p(11), p(23), p(13.5));
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(p(21), p(10.5));
+            ctx.quadraticCurveTo(p(22), p(12), p(21.5), p(14.5));
+            ctx.stroke();
+        }
+
+        sizes.forEach(size => {
+            const div = document.createElement('div');
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            div.appendChild(canvas);
+            
+            const ctx = canvas.getContext('2d');
+            drawHorse(ctx, size);
+
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL("image/png");
+            link.download = `icon-${size}.png`;
+            link.className = 'download-link';
+            link.innerText = `Download ${size}x${size}`;
+            div.appendChild(link);
+
+            container.appendChild(div);
+
+            // Also create maskable (with padding)
+            if (size === 512) {
+                const mDiv = document.createElement('div');
+                const mCanvas = document.createElement('canvas');
+                mCanvas.width = size;
+                mCanvas.height = size;
+                mDiv.appendChild(mCanvas);
+                const mCtx = mCanvas.getContext('2d');
+                
+                // Maskable: Dark background
+                mCtx.fillStyle = "black";
+                mCtx.fillRect(0, 0, size, size);
+                
+                // Draw logo in center with padding
+                mCtx.save();
+                const padding = size * 0.15;
+                const logoSize = size - (padding * 2);
+                mCtx.translate(padding, padding);
+                drawHorse(mCtx, logoSize);
+                mCtx.restore();
+
+                const mLink = document.createElement('a');
+                mLink.href = mCanvas.toDataURL("image/png");
+                mLink.download = `icon-maskable-512.png`;
+                mLink.className = 'download-link';
+                mLink.innerText = `Download Maskable 512x512`;
+                mDiv.appendChild(mLink);
+                container.appendChild(mDiv);
+            }
+        });
+    </script>
+</body>
+</html>

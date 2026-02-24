@@ -1,0 +1,28 @@
+{
+  "name": "Stævne Rytterliste",
+  "short_name": "Rytterliste",
+  "description": "Filmliste til rytterstævner - by LeeP Media",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDM4IDM4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIzOCIgaGVpZ2h0PSIzOCIgcng9IjkiIGZpbGw9IiMwYTg0ZmYiLz48cGF0aCBkPSJNMTEgMjggTDExIDIyIEMxMSAxOCwgMTMgMTUsIDE1IDEzIEwxNCAxMSBDMTQgMTAsIDE1IDksIDE2IDkgTDE3IDEwIEMxOCA5LCAxOSA4LjUsIDIwIDguNSBDMjEgOC41LCAyMiA5LCAyMi41IDEwIEwyNCA5IEMyNC41IDguOCwgMjUgOSwgMjUgOS41IEwyNCAxMSBDMjUgMTIsIDI2IDE0LCAyNiAxNiBMMjYgMTggQzI3IDE4LjUsIDI3LjUgMTksIDI3LjUgMjAgQzI3LjUgMjEsIDI3IDIxLjUsIDI2IDIyIEwyNiAyOCBaIiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjIwIiBjeT0iMTMiIHI9IjEuMiIgZmlsbD0iIzBhODRmZiIvPjxjaXJjbGUgY3g9IjE1IiBjeT0iMTguNSIgcj0iMC44IiBmaWxsPSIjMGE4NGZmIi8+PHBhdGggZD0iTTIyIDEwIEMyMyAxMSwgMjMuNSAxMiwgMjMgMTMuNSIgc3Ryb2tlPSIjMGE4NGZmIiBzdHJva2Utd2lkdGg9IjAuOCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTIxIDEwLjUgQzIyIDEyLCAyMiAxMywgMjEuNSAxNC41IiBzdHJva2U9IiMwYTg0ZmYiIHN0cm9rZS13aWR0aD0iMC44IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4=",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDM4IDM4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIzOCIgaGVpZ2h0PSIzOCIgcng9IjkiIGZpbGw9IiMwYTg0ZmYiLz48cGF0aCBkPSJNMTEgMjggTDExIDIyIEMxMSAxOCwgMTMgMTUsIDE1IDEzIEwxNCAxMSBDMTQgMTAsIDE1IDksIDE2IDkgTDE3IDEwIEMxOCA5LCAxOSA4LjUsIDIwIDguNSBDMjEgOC41LCAyMiA5LCAyMi41IDEwIEwyNCA5IEMyNC41IDguOCwgMjUgOSwgMjUgOS41IEwyNCAxMSBDMjUgMTIsIDI2IDE0LCAyNiAxNiBMMjYgMTggQzI3IDE4LjUsIDI3LjUgMTksIDI3LjUgMjAgQzI3LjUgMjEsIDI3IDIxLjUsIDI2IDIyIEwyNiAyOCBaIiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjIwIiBjeT0iMTMiIHI9IjEuMiIgZmlsbD0iIzBhODRmZiIvPjxjaXJjbGUgY3g9IjE1IiBjeT0iMTguNSIgcj0iMC44IiBmaWxsPSIjMGE4NGZmIi8+PHBhdGggZD0iTTIyIDEwIEMyMyAxMSwgMjMuNSAxMiwgMjMgMTMuNSIgc3Ryb2tlPSIjMGE4NGZmIiBzdHJva2Utd2lkdGg9IjAuOCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTIxIDEwLjUgQzIyIDEyLCAyMiAxMywgMjEuNSAxNC41IiBzdHJva2U9IiMwYTg0ZmYiIHN0cm9rZS13aWR0aD0iMC44IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4=",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equipe Filmliste</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Rytterliste">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      background: #000000;
+      color: #f5f5f7;
+      min-height: 100vh;
+      padding: 16px;
+      padding-top: calc(16px + env(safe-area-inset-top));
+      padding-left: calc(16px + env(safe-area-inset-left));
+      padding-right: calc(16px + env(safe-area-inset-right));
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+      -webkit-font-smoothing: antialiased;
+    }
+    h1 { color: #f5f5f7; margin-bottom: 0; font-size: 1.4rem; font-weight: 600; display: inline; letter-spacing: -0.02em; }
+    .logo-header { cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+    .logo-header svg { flex-shrink: 0; }
+    .logo-header:active { opacity: 0.7; }
+    h2 { color: #f5f5f7; font-size: 1.1rem; font-weight: 600; margin: 16px 0 8px; }
+    h3 { color: #86868b; margin: 16px 0 8px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .container { max-width: 700px; margin: 0 auto; }
+
+    select, button, input {
+      background: #1c1c1e;
+      color: #f5f5f7;
+      border: 1px solid #38383a;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 1rem;
+      width: 100%;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    select:focus, input:focus { outline: none; border-color: #0a84ff; box-shadow: 0 0 0 3px rgba(10,132,255,0.3); }
+    button {
+      background: #0a84ff;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+    button:hover { background: #0071e3; }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    button.secondary { background: #1c1c1e; border: 1px solid #38383a; color: #f5f5f7; }
+    button.secondary:hover { background: #2c2c2e; }
+
+    .rider-list { list-style: none; max-height: 50vh; overflow-y: auto; overflow-x: hidden; margin-bottom: 12px; -webkit-overflow-scrolling: touch; width: calc(100% - 48px); margin-left: auto; margin-right: auto; background: #1c1c1e; border-radius: 12px; }
+    .rider-list li {
+      padding: 12px 16px;
+      border-bottom: 1px solid #38383a;
+      display: table;
+      width: 100%;
+    }
+    .rider-list li:last-child { border-bottom: none; }
+    .rider-list li:active { background: #2c2c2e; }
+    .rider-list input[type=checkbox] { width: 22px; height: 22px; vertical-align: middle; margin-right: 12px; flex-shrink: 0; accent-color: #0a84ff; }
+    .rider-list label { cursor: pointer; font-size: 0.95rem; line-height: 1.4; }
+    .rider-list .club { color: #86868b; font-size: 0.82rem; display: block; margin-top: 2px; }
+
+    .search-box { margin-bottom: 8px; }
+
+    .loading { text-align: center; padding: 32px; color: #86868b; }
+    .loading::after { content: '...'; animation: dots 1.5s steps(3) infinite; }
+    @keyframes dots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } }
+
+    /* Film list view */
+    .film-list { margin-top: 16px; }
+    .day-header {
+      background: #1c1c1e;
+      color: #f5f5f7;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin: 12px 0 8px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      border: 1px solid #38383a;
+      transition: background 0.2s;
+    }
+    .day-header:active { background: #2c2c2e; }
+    .day-header .toggle { font-size: 0.8rem; color: #86868b; }
+    .day-content.collapsed { display: none; }
+    .class-entry {
+      background: #1c1c1e;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 6px;
+      border: 1px solid #2c2c2e;
+    }
+    .class-time {
+      color: #0a84ff;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .rider-entry {
+      padding: 6px 0 4px 16px;
+      font-size: 0.93rem;
+      color: #e5e5e5;
+    }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tabs button { flex: 1; }
+    .tabs button.active { background: #0a84ff; }
+
+    .badge {
+      background: #0a84ff;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 7px;
+      font-size: 0.75rem;
+      margin-left: 4px;
+    }
+
+    /* Pull-to-refresh */
+    .ptr-indicator {
+      text-align: center;
+      height: 0;
+      overflow: hidden;
+      transition: height 0.3s ease;
+      color: #86868b;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ptr-indicator.active { height: 50px; }
+    .ptr-spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid #38383a;
+      border-top-color: #0a84ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Live / past class indicators */
+    .class-entry.live {
+      border-left: 3px solid #30d158;
+      position: relative;
+    }
+    .class-entry.past { opacity: 0.5; }
+    .live-badge {
+      display: inline-block;
+      background: #30d158;
+      color: #000;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      margin-left: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      vertical-align: middle;
+    }
+
+    /* Countdown box */
+    .countdown-box {
+      background: #1c1c1e;
+      border: 1px solid #38383a;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+      color: #f5f5f7;
+      display: none;
+    }
+    .countdown-box .countdown-label { color: #86868b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+    .countdown-box .countdown-main { font-weight: 600; }
+    .countdown-box .countdown-time { color: #0a84ff; }
+
+    /* Film mode */
+    .filmmode-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .filmmode-toggle {
+      background: #1c1c1e !important;
+      border: 1px solid #38383a !important;
+      color: #f5f5f7 !important;
+      width: auto !important;
+      padding: 8px 14px !important;
+      font-size: 0.85rem !important;
+      white-space: nowrap;
+    }
+    .filmmode-toggle.active {
+      background: #0a84ff !important;
+      border-color: #0a84ff !important;
+      color: #fff !important;
+    }
+    .filmmode-counter {
+      color: #86868b;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+    .rider-entry.filmed {
+      opacity: 0.4;
+      text-decoration: line-through;
+    }
+    .film-checkbox {
+      width: 20px !important; height: 20px !important;
+      margin: 0 !important;
+      margin-right: 8px !important;
+      vertical-align: middle;
+      accent-color: #30d158;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .rider-entry { display: flex; align-items: center; }
+    .rider-entry .film-checkbox { display: none; }
+    .filmmode-active .rider-entry .film-checkbox { display: inline-block; }
+
+    .select-controls { display: flex; gap: 8px; margin-bottom: 8px; }
+    .select-controls button { font-size: 0.85rem; padding: 8px; }
+
+    .selected-rider-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1c1c1e;
+      border: 1px solid #38383a;
+      border-radius: 20px;
+      padding: 6px 12px;
+      margin: 0 6px 6px 0;
+      font-size: 0.85rem;
+    }
+    .selected-rider-chip .remove-rider {
+      color: #ff453a;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 0 2px;
+    }
+    .selected-rider-chip .remove-rider:active { opacity: 0.5; }
+
+    #saved-lists { margin-top: 16px; }
+    .list-link {
+      display: block;
+      background: #1c1c1e;
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      text-decoration: none;
+      color: #f5f5f7;
+      border: 1px solid #38383a;
+      transition: background 0.2s;
+    }
+    .list-link:active { background: #2c2c2e; }
+    .list-link .list-name { color: #f5f5f7; font-weight: 600; }
+    .list-link .list-date { color: #86868b; font-size: 0.82rem; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-header" onclick="location.href='/'">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="38" height="38" rx="9" fill="#0a84ff"/>
+        <!-- Horse head profile - knight chess piece style -->
+        <path d="M11 28 L11 22 C11 18, 13 15, 15 13 L14 11 C14 10, 15 9, 16 9 L17 10 C18 9, 19 8.5, 20 8.5 C21 8.5, 22 9, 22.5 10 L24 9 C24.5 8.8, 25 9, 25 9.5 L24 11 C25 12, 26 14, 26 16 L26 18 C27 18.5, 27.5 19, 27.5 20 C27.5 21, 27 21.5, 26 22 L26 28 Z" fill="white"/>
+        <!-- Eye -->
+        <circle cx="20" cy="13" r="1.2" fill="#0a84ff"/>
+        <!-- Nostril -->
+        <circle cx="15" cy="18.5" r="0.8" fill="#0a84ff"/>
+        <!-- Mane lines -->
+        <path d="M22 10 C23 11, 23.5 12, 23 13.5" stroke="#0a84ff" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+        <path d="M21 10.5 C22 12, 22 13, 21.5 14.5" stroke="#0a84ff" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+      </svg>
+      <h1>Stævne Rytterliste</h1>
+    </div>
+
+    <!-- Page: Create -->
+    <div id="page-create">
+      <p style="color:#86868b; margin-bottom:16px; font-size:0.9rem;">Vælg stævne og ryttere til din filmliste</p>
+
+      <select id="show-select">
+        <option value="">Indlæser stævner...</option>
+      </select>
+
+      <div id="riders-section" style="display:none;">
+        <input type="text" id="rider-search" class="search-box" placeholder="🔍 Søg rytter...">
+        <input type="hidden" id="riders-loaded" value="">
+        <div class="select-controls">
+          <button class="secondary" onclick="selectAll()">Vælg alle</button>
+          <button class="secondary" onclick="selectNone()">Fravælg alle</button>
+        </div>
+        <div id="riders-loading" class="loading" style="display:none;">Henter ryttere</div>
+        <ul class="rider-list" id="rider-list"></ul>
+        <button id="create-btn" onclick="createList()" disabled>Opret filmliste (<span id="selected-count">0</span> ryttere)</button>
+      </div>
+
+      <div id="saved-lists"></div>
+    </div>
+
+    <!-- Page: View list -->
+    <div id="page-view" style="display:none;">
+      <div class="ptr-indicator" id="ptr-indicator"><div class="ptr-spinner"></div>Opdaterer...</div>
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button class="secondary" onclick="showPage('create')" style="width:auto;">← Tilbage</button>
+        <button class="secondary" onclick="refreshList()" id="refresh-btn" style="width:auto;">🔄 Opdater</button>
+      </div>
+      <div class="filmmode-bar" id="filmmode-bar" style="display:none;">
+        <button class="filmmode-toggle" id="filmmode-btn" onclick="toggleFilmMode()">📋 Filmmode</button>
+        <span class="filmmode-counter" id="filmmode-counter"></span>
+      </div>
+      <div class="countdown-box" id="countdown-box">
+        <div class="countdown-label">Næste</div>
+        <div class="countdown-main" id="countdown-main"></div>
+      </div>
+      <div id="list-content"></div>
+
+      <div style="margin-top:24px; border-top: 1px solid #38383a; padding-top:16px;">
+        <h3>Valgte ryttere</h3>
+        <div id="selected-riders-list" style="margin-bottom:16px;"></div>
+      </div>
+
+      <div style="border-top: 1px solid #38383a; padding-top:16px;">
+        <h3>Tilføj flere ryttere</h3>
+        <input type="text" id="add-rider-search" class="search-box" placeholder="🔍 Søg rytter...">
+        <ul class="rider-list" id="add-rider-list"></ul>
+        <button id="update-btn" onclick="updateListRiders()" style="display:none;">Opdater filmliste</button>
+      </div>
+    </div>
+  </div>
+
+  <footer style="text-align:center; padding:32px 0 16px; color:#48484a; font-size:0.75rem; letter-spacing:0.02em;">
+    Made by <span style="color:#86868b; font-weight:600;">LeeP Media</span>
+  </footer>
+
+  <script>
+    let currentShows = [];
+    let currentRiders = [];
+    let currentListId = null;
+    let currentListData = null;
+
+    // Init
+    async function init() {
+      // Check if URL has list id
+      const params = new URLSearchParams(location.search);
+      if (params.get('list')) {
+        await viewList(params.get('list'));
+        return;
+      }
+      await loadShows();
+      loadSavedLists();
+    }
+
+    async function loadShows() {
+      try {
+        const res = await fetch('/api/shows');
+        currentShows = await res.json();
+        const sel = document.getElementById('show-select');
+        sel.innerHTML = '<option value="">Vælg stævne...</option>';
+        for (const s of currentShows) {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = `${s.name} (${s.startDate} – ${s.endDate})`;
+          sel.appendChild(opt);
+        }
+        sel.onchange = () => {
+          currentRiders = [];
+          selectedRiderIds.clear();
+          const section = document.getElementById('riders-section');
+          if (sel.value) {
+            section.style.display = 'block';
+            document.getElementById('rider-list').innerHTML = '<li style="color:#888; padding:12px;">Tryk på søgefeltet for at hente ryttere</li>';
+            document.getElementById('riders-loaded').value = '';
+          } else {
+            section.style.display = 'none';
+          }
+        };
+      } catch (err) {
+        console.error(err);
+        document.getElementById('show-select').innerHTML = '<option>Fejl ved indlæsning</option>';
+      }
+    }
+
+    async function loadRiders(showId) {
+      const section = document.getElementById('riders-section');
+      const list = document.getElementById('rider-list');
+      const loading = document.getElementById('riders-loading');
+      section.style.display = 'block';
+      list.innerHTML = '';
+      loading.style.display = 'block';
+
+      try {
+        const res = await fetch(`/api/shows/${showId}/riders`);
+        currentRiders = await res.json();
+        loading.style.display = 'none';
+        renderRiders();
+      } catch (err) {
+        loading.textContent = 'Fejl ved indlæsning af ryttere';
+        console.error(err);
+      }
+    }
+
+    const selectedRiderIds = new Set();
+
+    function renderRiders(filter = '') {
+      const list = document.getElementById('rider-list');
+      list.innerHTML = '';
+      const f = filter.toLowerCase();
+      for (const r of currentRiders) {
+        if (f && !r.name.toLowerCase().includes(f) && !(r.club || '').toLowerCase().includes(f)) continue;
+        const li = document.createElement('li');
+        const checked = selectedRiderIds.has(r.id) ? 'checked' : '';
+        li.innerHTML = `
+          <input type="checkbox" id="r${r.id}" data-rider-id="${r.id}" ${checked} onchange="toggleRider(${r.id}, this.checked)">
+          <label for="r${r.id}">${r.name} <span class="club">${r.club || ''}</span></label>
+        `;
+        list.appendChild(li);
+      }
+      updateCount();
+    }
+
+    function toggleRider(id, checked) {
+      if (checked) selectedRiderIds.add(id);
+      else selectedRiderIds.delete(id);
+      updateCount();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchField = document.getElementById('rider-search');
+      searchField?.addEventListener('focus', async () => {
+        const showId = document.getElementById('show-select').value;
+        if (!showId) return;
+
+        if (document.getElementById('riders-loaded').value !== showId) {
+          await loadRiders(showId);
+          document.getElementById('riders-loaded').value = showId;
+        }
+        renderRiders(searchField.value);
+      });
+      searchField?.addEventListener('input', e => renderRiders(e.target.value));
+    });
+
+    function selectAll() {
+      document.querySelectorAll('#rider-list input[type=checkbox]').forEach(cb => {
+        cb.checked = true;
+        selectedRiderIds.add(Number(cb.dataset.riderId));
+      });
+      updateCount();
+    }
+    function selectNone() {
+      selectedRiderIds.clear();
+      document.querySelectorAll('#rider-list input[type=checkbox]').forEach(cb => cb.checked = false);
+      updateCount();
+    }
+
+    function updateCount() {
+      document.getElementById('selected-count').textContent = selectedRiderIds.size;
+      document.getElementById('create-btn').disabled = selectedRiderIds.size === 0;
+    }
+
+    async function createList() {
+      const showId = document.getElementById('show-select').value;
+      const show = currentShows.find(s => s.id == showId);
+      const riderIds = [...selectedRiderIds];
+
+      const btn = document.getElementById('create-btn');
+      btn.disabled = true;
+      btn.textContent = 'Opretter...';
+
+      try {
+        const res = await fetch('/api/lists', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            showId: Number(showId),
+            showName: show.name,
+            startDate: show.startDate,
+            endDate: show.endDate,
+            riderIds
+          })
+        });
+        const list = await res.json();
+        saveTolocalStorage(list);
+        await viewList(list.id);
+      } catch (err) {
+        alert('Fejl: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = `Opret filmliste (${riderIds.length} ryttere)`;
+      }
+    }
+
+    function saveTolocalStorage(list) {
+      const saved = JSON.parse(localStorage.getItem('filmLists') || '[]');
+      saved.unshift({ id: list.id, showName: list.showName, startDate: list.startDate, endDate: list.endDate, createdAt: list.createdAt });
+      localStorage.setItem('filmLists', JSON.stringify(saved.slice(0, 50)));
+    }
+
+    function loadSavedLists() {
+      const saved = JSON.parse(localStorage.getItem('filmLists') || '[]');
+      const container = document.getElementById('saved-lists');
+      if (saved.length === 0) { container.innerHTML = ''; return; }
+      container.innerHTML = '<h3>Gemte filmlister</h3>';
+      for (const s of saved) {
+        container.innerHTML += `
+          <a class="list-link" href="?list=${s.id}">
+            <div class="list-name">${s.showName}</div>
+            <div class="list-date">${s.startDate} – ${s.endDate}</div>
+          </a>
+        `;
+      }
+    }
+
+    async function viewList(listId) {
+      showPage('view');
+      currentListId = listId;
+      const content = document.getElementById('list-content');
+      content.innerHTML = '<div class="loading">Henter filmliste</div>';
+
+      try {
+        const [listRes, schedRes] = await Promise.all([
+          fetch(`/api/lists/${listId}`),
+          fetch(`/api/lists/${listId}/schedule`)
+        ]);
+        currentListData = await listRes.json();
+        const sched = await schedRes.json();
+
+        history.replaceState(null, '', `?list=${listId}`);
+        renderSchedule(sched, currentListData);
+
+        // Load riders for selected list + "add more" section
+        const riderIdSet = new Set(currentListData.riderIds);
+        const ridersRes = await fetch(`/api/shows/${currentListData.showId}/riders`);
+        const allRiders = await ridersRes.json();
+        renderSelectedRiders(allRiders, riderIdSet);
+        loadAddRiders(currentListData.showId, riderIdSet);
+      } catch (err) {
+        content.innerHTML = `<p style="color:#e94560;">Fejl: ${err.message}</p>`;
+      }
+    }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      const days = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'];
+      const months = ['januar', 'februar', 'marts', 'april', 'maj', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'december'];
+      return `${days[d.getDay()]} ${d.getDate()}. ${months[d.getMonth()]}`;
+    }
+
+    function formatTime(timeStr) {
+      if (!timeStr) return '';
+      // Handle "2026-02-22 08:00:00 +0100" format
+      const match = timeStr.match(/(\d{2}):(\d{2}):\d{2}/);
+      if (match) return `${match[1]}.${match[2]}`;
+      // Fallback: try Date parsing
+      const d = new Date(timeStr);
+      if (!isNaN(d)) return `${String(d.getHours()).padStart(2,'0')}.${String(d.getMinutes()).padStart(2,'0')}`;
+      return '';
+    }
+
+    function renderSchedule(sched, listData) {
+      const content = document.getElementById('list-content');
+      let html = `<h1>${sched.showName}</h1>`;
+      html += `<p style="color:#888; margin-bottom:16px;">${sched.startDate} – ${sched.endDate}</p>`;
+
+      const dates = Object.keys(sched.schedule).sort();
+      if (dates.length === 0) {
+        html += '<p style="color:#888;">Ingen klasser fundet med valgte ryttere.</p>';
+        content.innerHTML = html;
+        return;
+      }
+
+      for (const date of dates) {
+        const dayId = 'day-' + date;
+        html += `<div class="day-header" onclick="toggleDay('${dayId}')"><span>${formatDate(date)}</span><span class="toggle" id="toggle-${dayId}">▼</span></div>`;
+        html += `<div class="day-content" id="${dayId}">`;
+        for (const cls of sched.schedule[date]) {
+          const time = formatTime(cls.time);
+          html += `<div class="class-entry">`;
+          const equipeUrl = cls.classSectionId ? `https://online.equipe.com/startlists/${cls.classSectionId}` : '#';
+          html += `<div class="class-time"><a href="${equipeUrl}" target="_blank" style="color:inherit; text-decoration:none;">Kl. ${time} / ${cls.classNo ? 'Klasse ' + cls.classNo + ' - ' : ''}${cls.className}</a></div>`;
+          for (const r of cls.riders) {
+            html += `<div class="rider-entry">Nr. ${r.startNo || '?'} - ${r.riderName} / ${r.horseName}</div>`;
+          }
+          html += `</div>`;
+        }
+        html += `</div>`; // close day-content
+      }
+
+      content.innerHTML = html;
+    }
+
+    function renderSelectedRiders(riders, riderIdSet) {
+      const container = document.getElementById('selected-riders-list');
+      if (!container) return;
+      if (riderIdSet.size === 0) {
+        container.innerHTML = '<p style="color:#86868b; font-size:0.85rem;">Ingen ryttere valgt</p>';
+        return;
+      }
+      const selected = riders.filter(r => riderIdSet.has(r.id));
+      container.innerHTML = selected.map(r =>
+        `<span class="selected-rider-chip">${r.name} <span class="remove-rider" onclick="removeRiderFromList(${r.id})">&times;</span></span>`
+      ).join('');
+    }
+
+    async function removeRiderFromList(riderId) {
+      if (!currentListData) return;
+      const newIds = currentListData.riderIds.filter(id => id !== riderId);
+      try {
+        await fetch(`/api/lists/${currentListId}/riders`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ riderIds: newIds })
+        });
+        await viewList(currentListId);
+      } catch (err) {
+        alert('Fejl: ' + err.message);
+      }
+    }
+
+    async function loadAddRiders(showId, existingRiderIds) {
+      const list = document.getElementById('add-rider-list');
+      list.innerHTML = '<li class="loading">Henter ryttere</li>';
+
+      try {
+        const res = await fetch(`/api/shows/${showId}/riders`);
+        const riders = await res.json();
+        list.innerHTML = '';
+        const search = document.getElementById('add-rider-search');
+
+        function renderAdd(filter = '') {
+          list.innerHTML = '';
+          const f = filter.toLowerCase();
+          for (const r of riders) {
+            if (existingRiderIds.has(r.id)) continue;
+            if (f && !r.name.toLowerCase().includes(f) && !(r.club||'').toLowerCase().includes(f)) continue;
+            const li = document.createElement('li');
+            li.innerHTML = `
+              <input type="checkbox" id="ar${r.id}" data-rider-id="${r.id}" onchange="showUpdateBtn()">
+              <label for="ar${r.id}">${r.name} <span class="club">${r.club || ''}</span></label>
+            `;
+            list.appendChild(li);
+          }
+        }
+        renderAdd();
+        search.oninput = () => renderAdd(search.value);
+      } catch (err) {
+        list.innerHTML = '<li>Fejl ved indlæsning</li>';
+      }
+    }
+
+    function showUpdateBtn() {
+      const count = document.querySelectorAll('#add-rider-list input:checked').length;
+      const btn = document.getElementById('update-btn');
+      btn.style.display = count > 0 ? 'block' : 'none';
+      btn.textContent = `Tilføj ${count} rytter${count > 1 ? 'e' : ''} til listen`;
+    }
+
+    async function updateListRiders() {
+      const newIds = [...document.querySelectorAll('#add-rider-list input:checked')].map(cb => Number(cb.dataset.riderId));
+      if (newIds.length === 0) return;
+      
+      // Merge without duplicates
+      const existingIds = new Set(currentListData.riderIds);
+      for (const id of newIds) existingIds.add(id);
+      const allIds = [...existingIds];
+
+      const btn = document.getElementById('update-btn');
+      btn.disabled = true;
+      btn.textContent = 'Opdaterer...';
+
+      try {
+        await fetch(`/api/lists/${currentListId}/riders`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ riderIds: allIds })
+        });
+        await viewList(currentListId);
+      } catch (err) {
+        alert('Fejl: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = `Tilføj ${newIds.length} rytter${newIds.length > 1 ? 'e' : ''} til listen`;
+      }
+    }
+
+    function toggleDay(dayId) {
+      const el = document.getElementById(dayId);
+      const toggle = document.getElementById('toggle-' + dayId);
+      el.classList.toggle('collapsed');
+      toggle.textContent = el.classList.contains('collapsed') ? '▶' : '▼';
+    }
+
+    async function refreshList() {
+      if (!currentListId) return;
+      const btn = document.getElementById('refresh-btn');
+      btn.textContent = '⏳ Opdaterer...';
+      btn.disabled = true;
+      await viewList(currentListId);
+      btn.textContent = '🔄 Opdater';
+      btn.disabled = false;
+    }
+
+    function showPage(page) {
+      document.getElementById('page-create').style.display = page === 'create' ? 'block' : 'none';
+      document.getElementById('page-view').style.display = page === 'view' ? 'block' : 'none';
+      if (page === 'create') {
+        history.replaceState(null, '', location.pathname);
+        
+        // Ensure shows are loaded if the list is empty
+        if (currentShows.length === 0) {
+          loadShows();
+        }
+
+        // Reset create button
+        const btn = document.getElementById('create-btn');
+        if (btn) {
+          btn.disabled = selectedRiderIds.size === 0;
+          btn.innerHTML = `Opret filmliste (<span id="selected-count">${selectedRiderIds.size}</span> ryttere)`;
+        }
+        
+        // Hide riders section when going back
+        document.getElementById('riders-section').style.display = 'none';
+        document.getElementById('show-select').value = '';
+        
+        loadSavedLists();
+      }
+    }
+
+    // ===== PULL TO REFRESH =====
+    let ptrStartY = 0, ptrActive = false;
+    document.addEventListener('touchstart', e => {
+      const pv = document.getElementById('page-view');
+      if (pv.style.display === 'none') return;
+      if (window.scrollY === 0) { ptrStartY = e.touches[0].clientY; ptrActive = true; }
+    }, { passive: true });
+    document.addEventListener('touchmove', e => {
+      if (!ptrActive) return;
+      const dy = e.touches[0].clientY - ptrStartY;
+      if (dy > 60) {
+        document.getElementById('ptr-indicator').classList.add('active');
+      }
+    }, { passive: true });
+    document.addEventListener('touchend', () => {
+      if (!ptrActive) return;
+      ptrActive = false;
+      const ind = document.getElementById('ptr-indicator');
+      if (ind.classList.contains('active')) {
+        refreshList().then(() => ind.classList.remove('active'));
+      }
+    });
+
+    // ===== LIVE / PAST CLASS INDICATORS + COUNTDOWN =====
+    let lastScheduleData = null;
+    let countdownInterval = null;
+
+    function parseClassTime(timeStr) {
+      if (!timeStr) return null;
+      const m = timeStr.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}):(\d{2})/);
+      if (m) return new Date(m[1] + 'T' + m[2] + ':' + m[3] + ':00');
+      return null;
+    }
+
+    function updateTimeIndicators() {
+      if (!lastScheduleData) return;
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+      const dates = Object.keys(lastScheduleData.schedule).sort();
+
+      // Flatten all classes with parsed times
+      let allClasses = [];
+      for (const date of dates) {
+        const classes = lastScheduleData.schedule[date];
+        for (let i = 0; i < classes.length; i++) {
+          const t = parseClassTime(classes[i].time);
+          const nextT = (i + 1 < classes.length) ? parseClassTime(classes[i + 1].time) : null;
+          allClasses.push({ date, cls: classes[i], time: t, nextTime: nextT, index: i });
+        }
+      }
+
+      // Mark live/past on DOM
+      document.querySelectorAll('.class-entry').forEach(el => el.classList.remove('live', 'past'));
+      document.querySelectorAll('.live-badge').forEach(el => el.remove());
+
+      let liveFound = false;
+      let nextClass = null;
+
+      for (const item of allClasses) {
+        if (!item.time) continue;
+        const entryEls = document.querySelectorAll(`[data-class-id="${item.cls.classSectionId}"]`);
+        const endTime = item.nextTime || new Date(item.time.getTime() + 60 * 60 * 1000); // default 1hr
+
+        if (now >= item.time && now < endTime) {
+          // LIVE
+          entryEls.forEach(el => {
+            el.classList.add('live');
+            const timeEl = el.querySelector('.class-time');
+            if (timeEl && !timeEl.querySelector('.live-badge')) {
+              timeEl.insertAdjacentHTML('beforeend', '<span class="live-badge">LIVE</span>');
+            }
+          });
+          liveFound = true;
+        } else if (now >= endTime) {
+          entryEls.forEach(el => el.classList.add('past'));
+        } else if (!nextClass) {
+          nextClass = item;
+        }
+      }
+
+      // Countdown
+      const box = document.getElementById('countdown-box');
+      if (nextClass && nextClass.time) {
+        const diffMin = Math.round((nextClass.time - now) / 60000);
+        const firstRider = nextClass.cls.riders?.[0];
+        const riderInfo = firstRider ? `${firstRider.riderName} i ` : '';
+        const classLabel = nextClass.cls.classNo ? `Klasse ${nextClass.cls.classNo}` : nextClass.cls.className;
+        const timeLabel = diffMin <= 0 ? 'starter nu' : diffMin < 60 ? `om ${diffMin} min` : `om ${Math.floor(diffMin/60)}t ${diffMin%60}min`;
+        document.getElementById('countdown-main').innerHTML = `${riderInfo}<span class="countdown-time">${classLabel}</span> ${timeLabel}`;
+        box.style.display = 'block';
+      } else {
+        box.style.display = 'none';
+      }
+    }
+
+    // ===== FILM MODE =====
+    let filmModeOn = false;
+
+    function getFilmKey() {
+      return currentListId ? `filmChecked_${currentListId}` : null;
+    }
+    function getFilmChecked() {
+      const key = getFilmKey();
+      if (!key) return {};
+      try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
+    }
+    function setFilmChecked(data) {
+      const key = getFilmKey();
+      if (key) localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function toggleFilmMode() {
+      filmModeOn = !filmModeOn;
+      const btn = document.getElementById('filmmode-btn');
+      btn.classList.toggle('active', filmModeOn);
+      document.getElementById('list-content').classList.toggle('filmmode-active', filmModeOn);
+      updateFilmCounter();
+    }
+
+    function onFilmCheck(key, checked) {
+      const data = getFilmChecked();
+      if (checked) data[key] = true; else delete data[key];
+      setFilmChecked(data);
+      // Update visual
+      const entry = document.querySelector(`[data-film-key="${key}"]`);
+      if (entry) entry.classList.toggle('filmed', checked);
+      updateFilmCounter();
+    }
+
+    function updateFilmCounter() {
+      const total = document.querySelectorAll('.film-checkbox').length;
+      const checked = Object.keys(getFilmChecked()).length;
+      const counter = document.getElementById('filmmode-counter');
+      if (counter) counter.textContent = filmModeOn ? `${checked}/${total} filmet` : '';
+    }
+
+    // ===== PATCHED renderSchedule =====
+    const _origRenderSchedule = renderSchedule;
+    renderSchedule = function(sched, listData) {
+      lastScheduleData = sched;
+      const content = document.getElementById('list-content');
+      let html = `<h1>${sched.showName}</h1>`;
+      html += `<p style="color:#888; margin-bottom:16px;">${sched.startDate} – ${sched.endDate}</p>`;
+
+      const dates = Object.keys(sched.schedule).sort();
+      if (dates.length === 0) {
+        html += '<p style="color:#888;">Ingen klasser fundet med valgte ryttere.</p>';
+        content.innerHTML = html;
+        return;
+      }
+
+      const filmData = getFilmChecked();
+      let riderCount = 0;
+
+      for (const date of dates) {
+        const dayId = 'day-' + date;
+        html += `<div class="day-header" onclick="toggleDay('${dayId}')"><span>${formatDate(date)}</span><span class="toggle" id="toggle-${dayId}">▼</span></div>`;
+        html += `<div class="day-content" id="${dayId}">`;
+        for (const cls of sched.schedule[date]) {
+          const time = formatTime(cls.time);
+          const csId = cls.classSectionId || '';
+          html += `<div class="class-entry" data-class-id="${csId}">`;
+          const equipeUrl = csId ? `https://online.equipe.com/startlists/${csId}` : '#';
+          html += `<div class="class-time"><a href="${equipeUrl}" target="_blank" style="color:inherit; text-decoration:none;">Kl. ${time} / ${cls.classNo ? 'Klasse ' + cls.classNo + ' - ' : ''}${cls.className}</a></div>`;
+          for (const r of cls.riders) {
+            const filmKey = `${csId}_${r.riderName}_${r.horseName}`;
+            const filmed = filmData[filmKey] ? 'filmed' : '';
+            const checked = filmData[filmKey] ? 'checked' : '';
+            riderCount++;
+            html += `<div class="rider-entry ${filmed}" data-film-key="${filmKey}"><input type="checkbox" class="film-checkbox" ${checked} onchange="onFilmCheck('${filmKey.replace(/'/g,"\\'")}', this.checked)"><span>Nr. ${r.startNo || '?'} - ${r.riderName} / ${r.horseName}</span></div>`;
+          }
+          html += `</div>`;
+        }
+        html += `</div>`;
+      }
+
+      content.innerHTML = html;
+      content.classList.toggle('filmmode-active', filmModeOn);
+
+      // Show filmmode bar
+      document.getElementById('filmmode-bar').style.display = 'flex';
+      updateFilmCounter();
+
+      // Time indicators
+      updateTimeIndicators();
+      clearInterval(countdownInterval);
+      countdownInterval = setInterval(updateTimeIndicators, 60000);
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+
+    init();
+  </script>
+</body>
+</html>

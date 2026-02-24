@@ -1,0 +1,8 @@
+{
+  "appId": "dk.leepmedia.rytterliste",
+  "appName": "Stævne Rytterliste",
+  "webDir": "public",
+  "server": {
+    "androidScheme": "https"
+  }
+}

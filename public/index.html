@@ -2,423 +2,970 @@
 <html lang="da">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Equipe Filmliste</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>PaddockAI</title>
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#0c0c0e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Rytterliste">
+  <meta name="apple-mobile-web-app-title" content="PaddockAI">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
-      background: #000000;
-      color: #f5f5f7;
-      min-height: 100vh;
-      padding: 16px;
-      padding-top: calc(16px + env(safe-area-inset-top));
-      padding-left: calc(16px + env(safe-area-inset-left));
-      padding-right: calc(16px + env(safe-area-inset-right));
-      padding-bottom: calc(16px + env(safe-area-inset-bottom));
-      -webkit-font-smoothing: antialiased;
-    }
-    h1 { color: #f5f5f7; margin-bottom: 0; font-size: 1.4rem; font-weight: 600; display: inline; letter-spacing: -0.02em; }
-    .logo-header { cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; padding: 8px 0; }
-    .logo-header svg { flex-shrink: 0; }
-    .logo-header:active { opacity: 0.7; }
-    h2 { color: #f5f5f7; font-size: 1.1rem; font-weight: 600; margin: 16px 0 8px; }
-    h3 { color: #86868b; margin: 16px 0 8px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-
-    .container { max-width: 700px; margin: 0 auto; }
-
-    select, button, input {
-      background: #1c1c1e;
-      color: #f5f5f7;
-      border: 1px solid #38383a;
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 1rem;
-      width: 100%;
-      margin-bottom: 12px;
-      transition: all 0.2s ease;
-      font-family: inherit;
-    }
-    select:focus, input:focus { outline: none; border-color: #0a84ff; box-shadow: 0 0 0 3px rgba(10,132,255,0.3); }
-    button {
-      background: #0a84ff;
-      color: white;
-      cursor: pointer;
-      font-weight: 600;
-      border: none;
-      border-radius: 12px;
-      transition: all 0.2s ease;
-    }
-    button:hover { background: #0071e3; }
-    button:active { transform: scale(0.98); }
-    button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-    button.secondary { background: #1c1c1e; border: 1px solid #38383a; color: #f5f5f7; }
-    button.secondary:hover { background: #2c2c2e; }
-
-    .rider-list { list-style: none; max-height: 50vh; overflow-y: auto; overflow-x: hidden; margin-bottom: 12px; -webkit-overflow-scrolling: touch; width: calc(100% - 48px); margin-left: auto; margin-right: auto; background: #1c1c1e; border-radius: 12px; }
-    .rider-list li {
-      padding: 12px 16px;
-      border-bottom: 1px solid #38383a;
-      display: table;
-      width: 100%;
-    }
-    .rider-list li:last-child { border-bottom: none; }
-    .rider-list li:active { background: #2c2c2e; }
-    .rider-list input[type=checkbox] { width: 22px; height: 22px; vertical-align: middle; margin-right: 12px; flex-shrink: 0; accent-color: #0a84ff; }
-    .rider-list label { cursor: pointer; font-size: 0.95rem; line-height: 1.4; }
-    .rider-list .club { color: #86868b; font-size: 0.82rem; display: block; margin-top: 2px; }
-
-    .search-box { margin-bottom: 8px; }
-
-    .loading { text-align: center; padding: 32px; color: #86868b; }
-    .loading::after { content: '...'; animation: dots 1.5s steps(3) infinite; }
-    @keyframes dots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } }
-
-    /* Film list view */
-    .film-list { margin-top: 16px; }
-    .day-header {
-      background: #1c1c1e;
-      color: #f5f5f7;
-      padding: 12px 16px;
-      border-radius: 12px;
-      margin: 12px 0 8px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      user-select: none;
-      border: 1px solid #38383a;
-      transition: background 0.2s;
-    }
-    .day-header:active { background: #2c2c2e; }
-    .day-header .toggle { font-size: 0.8rem; color: #86868b; }
-    .day-content.collapsed { display: none; }
-    .class-entry {
-      background: #1c1c1e;
-      border-radius: 12px;
-      padding: 12px 16px;
-      margin-bottom: 6px;
-      border: 1px solid #2c2c2e;
-    }
-    .class-time {
-      color: #0a84ff;
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-    .rider-entry {
-      padding: 6px 0 4px 16px;
-      font-size: 0.93rem;
-      color: #e5e5e5;
-    }
-
-    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-    .tabs button { flex: 1; }
-    .tabs button.active { background: #0a84ff; }
-
-    .badge {
-      background: #0a84ff;
-      color: white;
-      border-radius: 50%;
-      padding: 2px 7px;
-      font-size: 0.75rem;
-      margin-left: 4px;
-    }
-
-    /* Pull-to-refresh */
-    .ptr-indicator {
-      text-align: center;
-      height: 0;
-      overflow: hidden;
-      transition: height 0.3s ease;
-      color: #86868b;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .ptr-indicator.active { height: 50px; }
-    .ptr-spinner {
-      display: inline-block;
-      width: 20px; height: 20px;
-      border: 2px solid #38383a;
-      border-top-color: #0a84ff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-right: 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Live / past class indicators */
-    .class-entry.live {
-      border-left: 3px solid #30d158;
-      position: relative;
-    }
-    .class-entry.past { opacity: 0.5; }
-    .live-badge {
-      display: inline-block;
-      background: #30d158;
-      color: #000;
-      font-size: 0.65rem;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 6px;
-      margin-left: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      vertical-align: middle;
-    }
-
-    /* Countdown box */
-    .countdown-box {
-      background: #1c1c1e;
-      border: 1px solid #38383a;
-      border-radius: 12px;
-      padding: 12px 16px;
-      margin-bottom: 12px;
-      font-size: 0.9rem;
-      color: #f5f5f7;
-      display: none;
-    }
-    .countdown-box .countdown-label { color: #86868b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
-    .countdown-box .countdown-main { font-weight: 600; }
-    .countdown-box .countdown-time { color: #0a84ff; }
-
-    /* Film mode */
-    .filmmode-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .filmmode-toggle {
-      background: #1c1c1e !important;
-      border: 1px solid #38383a !important;
-      color: #f5f5f7 !important;
-      width: auto !important;
-      padding: 8px 14px !important;
-      font-size: 0.85rem !important;
-      white-space: nowrap;
-    }
-    .filmmode-toggle.active {
-      background: #0a84ff !important;
-      border-color: #0a84ff !important;
-      color: #fff !important;
-    }
-    .filmmode-counter {
-      color: #86868b;
-      font-size: 0.82rem;
-      white-space: nowrap;
-    }
-    .rider-entry.filmed {
-      opacity: 0.4;
-      text-decoration: line-through;
-    }
-    .film-checkbox {
-      width: 20px !important; height: 20px !important;
-      margin: 0 !important;
-      margin-right: 8px !important;
-      vertical-align: middle;
-      accent-color: #30d158;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .rider-entry { display: flex; align-items: center; }
-    .rider-entry .film-checkbox { display: none; }
-    .filmmode-active .rider-entry .film-checkbox { display: inline-block; }
-
-    .select-controls { display: flex; gap: 8px; margin-bottom: 8px; }
-    .select-controls button { font-size: 0.85rem; padding: 8px; }
-
-    .selected-rider-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #1c1c1e;
-      border: 1px solid #38383a;
-      border-radius: 20px;
-      padding: 6px 12px;
-      margin: 0 6px 6px 0;
-      font-size: 0.85rem;
-    }
-    .selected-rider-chip .remove-rider {
-      color: #ff453a;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 1.1rem;
-      line-height: 1;
-      padding: 0 2px;
-    }
-    .selected-rider-chip .remove-rider:active { opacity: 0.5; }
-
-    #saved-lists { margin-top: 16px; }
-    .list-link {
-      display: block;
-      background: #1c1c1e;
-      padding: 14px 16px;
-      border-radius: 12px;
-      margin-bottom: 8px;
-      text-decoration: none;
-      color: #f5f5f7;
-      border: 1px solid #38383a;
-      transition: background 0.2s;
-    }
-    .list-link:active { background: #2c2c2e; }
-    .list-link .list-name { color: #f5f5f7; font-weight: 600; }
-    .list-link .list-date { color: #86868b; font-size: 0.82rem; margin-top: 2px; }
-  </style>
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <div class="container">
-    <div class="logo-header" onclick="location.href='/'">
-      <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="38" height="38" rx="9" fill="#0a84ff"/>
-        <!-- Horse head profile - knight chess piece style -->
-        <path d="M11 28 L11 22 C11 18, 13 15, 15 13 L14 11 C14 10, 15 9, 16 9 L17 10 C18 9, 19 8.5, 20 8.5 C21 8.5, 22 9, 22.5 10 L24 9 C24.5 8.8, 25 9, 25 9.5 L24 11 C25 12, 26 14, 26 16 L26 18 C27 18.5, 27.5 19, 27.5 20 C27.5 21, 27 21.5, 26 22 L26 28 Z" fill="white"/>
-        <!-- Eye -->
-        <circle cx="20" cy="13" r="1.2" fill="#0a84ff"/>
-        <!-- Nostril -->
-        <circle cx="15" cy="18.5" r="0.8" fill="#0a84ff"/>
-        <!-- Mane lines -->
-        <path d="M22 10 C23 11, 23.5 12, 23 13.5" stroke="#0a84ff" stroke-width="0.8" fill="none" stroke-linecap="round"/>
-        <path d="M21 10.5 C22 12, 22 13, 21.5 14.5" stroke="#0a84ff" stroke-width="0.8" fill="none" stroke-linecap="round"/>
-      </svg>
-      <h1>Stævne Rytterliste</h1>
+
+  <!-- ========== ONBOARDING SCREEN ========== -->
+  <div id="screen-onboarding" class="screen">
+    <div class="onboarding-container">
+      <div class="onboarding-logo">
+        <svg width="80" height="80" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="38" height="38" rx="9" fill="#c9a96e"/>
+          <path d="M11 28 L11 22 C11 18, 13 15, 15 13 L14 11 C14 10, 15 9, 16 9 L17 10 C18 9, 19 8.5, 20 8.5 C21 8.5, 22 9, 22.5 10 L24 9 C24.5 8.8, 25 9, 25 9.5 L24 11 C25 12, 26 14, 26 16 L26 18 C27 18.5, 27.5 19, 27.5 20 C27.5 21, 27 21.5, 26 22 L26 28 Z" fill="#0c0c0e"/>
+          <circle cx="20" cy="13" r="1.2" fill="#c9a96e"/>
+          <circle cx="15" cy="18.5" r="0.8" fill="#c9a96e"/>
+        </svg>
+      </div>
+      <h1 class="onboarding-title">PaddockAI</h1>
+      <p class="onboarding-tagline">Alt om dine heste — ét sted</p>
+      <div class="onboarding-features">
+        <div class="onboarding-feature">🏆 <span>Showplaner til stævner</span></div>
+        <div class="onboarding-feature">🐴 <span>Hold styr på dine heste</span></div>
+        <div class="onboarding-feature">📅 <span>Kalender og tidsplaner</span></div>
+      </div>
+      <button class="onboarding-cta" onclick="showScreen('register')">Kom i gang</button>
+      <p class="onboarding-login-link">Har du allerede en konto? <a href="#" onclick="showScreen('login'); return false;">Log ind</a></p>
     </div>
+  </div>
 
-    <!-- Page: Create -->
-    <div id="page-create">
-      <p style="color:#86868b; margin-bottom:16px; font-size:0.9rem;">Vælg stævne og ryttere til din filmliste</p>
-
-      <select id="show-select">
-        <option value="">Indlæser stævner...</option>
-      </select>
-
-      <div id="riders-section" style="display:none;">
-        <input type="text" id="rider-search" class="search-box" placeholder="🔍 Søg rytter...">
-        <input type="hidden" id="riders-loaded" value="">
-        <div class="select-controls">
-          <button class="secondary" onclick="selectAll()">Vælg alle</button>
-          <button class="secondary" onclick="selectNone()">Fravælg alle</button>
+  <!-- ========== REGISTER SCREEN ========== -->
+  <div id="screen-register" class="screen" style="display:none;">
+    <div class="auth-container">
+      <div class="auth-back" onclick="showScreen('onboarding')">← Tilbage</div>
+      <h2 class="auth-title">Opret din konto</h2>
+      <p class="auth-subtitle">Kom i gang med PaddockAI</p>
+      <form id="register-form" onsubmit="handleRegister(event)">
+        <label class="auth-label">Navn *</label>
+        <input type="text" id="reg-name" placeholder="Dit fulde navn" required autocomplete="name">
+        <label class="auth-label">Email *</label>
+        <input type="email" id="reg-email" placeholder="din@email.dk" required autocomplete="email">
+        <label class="auth-label">Profilbillede <span class="auth-optional">(valgfrit)</span></label>
+        <div class="avatar-upload-row">
+          <div class="avatar-preview" id="reg-avatar-preview">
+            <span id="reg-avatar-initials"></span>
+          </div>
+          <label class="avatar-upload-btn">
+            📷 Vælg billede
+            <input type="file" id="reg-avatar-input" accept="image/*" style="display:none;" onchange="handleAvatarSelect(event)">
+          </label>
         </div>
-        <div id="riders-loading" class="loading" style="display:none;">Henter ryttere</div>
-        <ul class="rider-list" id="rider-list"></ul>
-        <button id="create-btn" onclick="createList()" disabled>Opret filmliste (<span id="selected-count">0</span> ryttere)</button>
-      </div>
-
-      <div id="saved-lists"></div>
+        <button type="submit" id="reg-submit-btn">Opret konto</button>
+      </form>
     </div>
+  </div>
 
-    <!-- Page: View list -->
-    <div id="page-view" style="display:none;">
-      <div class="ptr-indicator" id="ptr-indicator"><div class="ptr-spinner"></div>Opdaterer...</div>
-      <div style="display:flex; gap:8px; margin-bottom:12px;">
-        <button class="secondary" onclick="showPage('create')" style="width:auto;">← Tilbage</button>
-        <button class="secondary" onclick="refreshList()" id="refresh-btn" style="width:auto;">🔄 Opdater</button>
-      </div>
-      <div class="filmmode-bar" id="filmmode-bar" style="display:none;">
-        <button class="filmmode-toggle" id="filmmode-btn" onclick="toggleFilmMode()">📋 Filmmode</button>
-        <span class="filmmode-counter" id="filmmode-counter"></span>
-      </div>
-      <div class="countdown-box" id="countdown-box">
-        <div class="countdown-label">Næste</div>
-        <div class="countdown-main" id="countdown-main"></div>
-      </div>
-      <div id="list-content"></div>
+  <!-- ========== LOGIN SCREEN ========== -->
+  <div id="screen-login" class="screen" style="display:none;">
+    <div class="auth-container">
+      <div class="auth-back" onclick="showScreen('onboarding')">← Tilbage</div>
+      <h2 class="auth-title">Log ind</h2>
+      <p class="auth-subtitle">Velkommen tilbage 🐴</p>
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <label class="auth-label">Email</label>
+        <input type="email" id="login-email" placeholder="din@email.dk" required autocomplete="email">
+        <button type="submit" id="login-submit-btn">Log ind</button>
+      </form>
+      <p class="auth-switch">Ingen konto? <a href="#" onclick="showScreen('register'); return false;">Opret en her</a></p>
+    </div>
+  </div>
 
-      <div style="margin-top:24px; border-top: 1px solid #38383a; padding-top:16px;">
-        <h3>Valgte ryttere</h3>
-        <div id="selected-riders-list" style="margin-bottom:16px;"></div>
+  <!-- ========== MAIN APP (after login) ========== -->
+  <div id="screen-app" class="screen" style="display:none;">
+
+    <!-- APP HEADER -->
+    <header class="app-header">
+      <div class="header-left" onclick="navigateTo('showplaner')">
+        <svg width="28" height="28" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="38" height="38" rx="9" fill="#c9a96e"/>
+          <path d="M11 28 L11 22 C11 18, 13 15, 15 13 L14 11 C14 10, 15 9, 16 9 L17 10 C18 9, 19 8.5, 20 8.5 C21 8.5, 22 9, 22.5 10 L24 9 C24.5 8.8, 25 9, 25 9.5 L24 11 C25 12, 26 14, 26 16 L26 18 C27 18.5, 27.5 19, 27.5 20 C27.5 21, 27 21.5, 26 22 L26 28 Z" fill="#0c0c0e"/>
+          <circle cx="20" cy="13" r="1.2" fill="#c9a96e"/>
+        </svg>
+        <span class="header-app-name">PaddockAI</span>
+      </div>
+      <div class="header-right">
+        <div class="header-user" onclick="toggleUserMenu()">
+          <div class="header-avatar" id="header-avatar"></div>
+          <span class="header-username" id="header-username"></span>
+          <span class="header-caret">▾</span>
+        </div>
+        <div class="user-dropdown" id="user-dropdown" style="display:none;">
+          <div class="dropdown-item" onclick="navigateTo('profil'); closeUserMenu();">👤 Min profil</div>
+          <div class="dropdown-item dropdown-danger" onclick="handleLogout()">🚪 Log ud</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- TAB CONTENT AREA -->
+    <main class="app-content">
+
+      <!-- ===== TAB: SHOWPLANER ===== -->
+      <div id="tab-showplaner" class="tab-content">
+
+        <!-- Sub-page: Create/List -->
+        <div id="sp-page-create">
+          <h2 class="tab-title">🏆 Showplaner</h2>
+          <p class="tab-desc">Vælg stævne og ryttere til dit hold</p>
+
+          <div id="discipline-filter" class="discipline-filter">
+            <button class="disc-btn active" data-discipline="all" onclick="setDiscipline('all')">Alle</button>
+            <button class="disc-btn" data-discipline="show_jumping" onclick="setDiscipline('show_jumping')">🐴 Spring</button>
+            <button class="disc-btn" data-discipline="dressage" onclick="setDiscipline('dressage')">💃 Dressur</button>
+            <button class="disc-btn" data-discipline="eventing" onclick="setDiscipline('eventing')">🏇 Military</button>
+          </div>
+
+          <div id="show-search-wrapper" style="position:relative;">
+            <input type="search" id="show-search" placeholder="🔍 Søg stævne..." autocomplete="off">
+            <ul class="dropdown-list" id="show-dropdown" style="display:none;"></ul>
+          </div>
+          <input type="hidden" id="show-select-value" value="">
+          <div id="show-selected-chip" style="display:none; margin-bottom:12px;">
+            <span class="chip" id="show-chip-inner"></span>
+          </div>
+
+          <div id="riders-section" style="display:none;">
+            <input type="search" id="rider-search" placeholder="🔍 Søg rytter...">
+            <input type="hidden" id="riders-loaded" value="">
+            <div class="select-controls">
+              <button class="btn-secondary" onclick="selectAll()">Vælg alle</button>
+              <button class="btn-secondary" onclick="selectNone()">Fravælg alle</button>
+            </div>
+            <div id="riders-loading" class="loading" style="display:none;">Henter ryttere</div>
+            <ul class="rider-list" id="rider-list"></ul>
+            <input type="text" id="list-name-input" placeholder="Holdnavn (fx 'Team Jensen - Herning')">
+            <button id="create-btn" onclick="createList()" disabled>Opret hold (<span id="selected-count">0</span> ryttere)</button>
+          </div>
+
+          <!-- Free plan limit info -->
+          <div class="plan-info-card" id="plan-info-card">
+            <span class="plan-info-text">Gratis plan: maks 3 ryttere per liste · 3 lister totalt</span>
+            <button class="btn-upgrade-small" onclick="showProModal()">⭐ PRO</button>
+          </div>
+
+          <div id="saved-lists"></div>
+        </div>
+
+        <!-- Sub-page: View/Dashboard -->
+        <div id="sp-page-view" style="display:none;">
+          <div class="view-actions">
+            <button class="btn-secondary" onclick="showSpPage('create')">← Mine hold</button>
+            <button class="btn-secondary" onclick="refreshList()" id="refresh-btn">🔄 Opdater</button>
+            <button class="btn-secondary" onclick="shareRider()" id="share-rider-btn">
+              📤 Del <span class="pro-badge">PRO</span>
+            </button>
+          </div>
+
+          <div id="share-banner" class="share-banner" style="display:none;">
+            <div class="share-banner-inner">
+              <input type="text" id="share-url" readonly>
+              <button class="btn-secondary" onclick="copyShareUrl()" id="copy-share-btn">📋 Kopiér</button>
+            </div>
+          </div>
+
+          <div id="sync-indicator" class="sync-indicator" style="display:none;">🟢 Live synkronisering aktiv</div>
+
+          <div class="next-up-box" id="next-up-box" style="display:none;">
+            <div class="next-up-label">Næste start</div>
+            <div class="next-up-rider" id="next-up-rider"></div>
+            <div class="next-up-horse" id="next-up-horse"></div>
+            <div class="next-up-class" id="next-up-class"></div>
+            <div class="next-up-countdown" id="next-up-countdown"></div>
+          </div>
+
+          <h3>Mine ryttere i dag</h3>
+          <div class="rider-timeline" id="rider-timeline"></div>
+
+          <div class="quick-add-section" id="quick-add-section">
+            <h3 style="margin:0 0 8px;">Hurtig-tilføj rytter</h3>
+            <input type="search" id="quick-add-search" placeholder="🔍 Søg rytter til holdet...">
+            <div class="quick-add-results" id="quick-add-results"></div>
+          </div>
+
+          <div class="pro-upgrade-banner">
+            <p>Lås op for ubegrænsede hold, push-notifikationer, deling og PDF-eksport</p>
+            <button class="pro-upgrade-btn" onclick="showProModal()">⭐ Opgrader til PRO — 49 kr/måned</button>
+          </div>
+
+          <details style="margin-top:16px;">
+            <summary style="color:var(--text2); cursor:pointer; font-size:0.85rem; padding:8px 0;">📋 Vis fuld startliste</summary>
+            <div id="list-content"></div>
+          </details>
+
+          <div style="margin-top:16px; border-top: 1px solid var(--border); padding-top:16px;">
+            <h3>Holdets ryttere</h3>
+            <div id="selected-riders-list"></div>
+          </div>
+        </div>
       </div>
 
-      <div style="border-top: 1px solid #38383a; padding-top:16px;">
-        <h3>Tilføj flere ryttere</h3>
-        <input type="text" id="add-rider-search" class="search-box" placeholder="🔍 Søg rytter...">
-        <ul class="rider-list" id="add-rider-list"></ul>
-        <button id="update-btn" onclick="updateListRiders()" style="display:none;">Opdater filmliste</button>
+      <!-- ===== TAB: MINE HESTE ===== -->
+      <div id="tab-heste" class="tab-content" style="display:none;">
+        <div class="coming-soon-page">
+          <div class="coming-soon-icon">🐴</div>
+          <h2>Mine Heste</h2>
+          <p class="coming-soon-subtitle">Under udvikling</p>
+          <div class="coming-soon-features">
+            <div class="cs-feature"><span class="cs-dot"></span> Profiler for alle dine heste</div>
+            <div class="cs-feature"><span class="cs-dot"></span> Sundhedslogbog og vaccinationer</div>
+            <div class="cs-feature"><span class="cs-dot"></span> Træningsdagbog og noter</div>
+            <div class="cs-feature"><span class="cs-dot"></span> Billeder og dokumenter</div>
+          </div>
+          <p class="coming-soon-cta">Vi arbejder hårdt på denne feature. Stay tuned! 🐴</p>
+        </div>
+      </div>
+
+      <!-- ===== TAB: KALENDER ===== -->
+      <div id="tab-kalender" class="tab-content" style="display:none;">
+        <div class="coming-soon-page">
+          <div class="coming-soon-icon">📅</div>
+          <h2>Kalender</h2>
+          <p class="coming-soon-subtitle">Under udvikling</p>
+          <div class="coming-soon-features">
+            <div class="cs-feature"><span class="cs-dot"></span> Overblik over kommende stævner</div>
+            <div class="cs-feature"><span class="cs-dot"></span> Træningsplan og aftaler</div>
+            <div class="cs-feature"><span class="cs-dot"></span> Automatisk synk med stævne-datoer</div>
+            <div class="cs-feature"><span class="cs-dot"></span> Påmindelser og notifikationer</div>
+          </div>
+          <p class="coming-soon-cta">Kalenderen kommer snart. Vi glæder os til at vise dig! 📅</p>
+        </div>
+      </div>
+
+      <!-- ===== TAB: PROFIL ===== -->
+      <div id="tab-profil" class="tab-content" style="display:none;">
+        <div class="profile-page">
+          <div class="profile-avatar-large" id="profile-avatar-large"></div>
+          <h2 id="profile-name" class="profile-name"></h2>
+          <p id="profile-email" class="profile-email"></p>
+          <div class="profile-plan-badge" id="profile-plan-badge">GRATIS</div>
+
+          <div class="profile-section">
+            <h3>Konto</h3>
+            <div class="profile-row">
+              <span>Plan</span>
+              <span id="profile-plan-text">Gratis</span>
+            </div>
+            <div class="profile-row">
+              <span>Medlem siden</span>
+              <span id="profile-member-since"></span>
+            </div>
+          </div>
+
+          <div class="profile-section">
+            <h3>PRO Plan</h3>
+            <div class="pro-features-list">
+              <div class="pro-feature-item">✓ Ubegrænsede ryttere per liste</div>
+              <div class="pro-feature-item">✓ "Mine ryttere" — gem faste favoritter</div>
+              <div class="pro-feature-item">✓ Notifikationer om ændringer</div>
+              <div class="pro-feature-item">✓ Eksportér startlister</div>
+            </div>
+            <button class="pro-upgrade-btn" onclick="showProModal()" style="margin-top:12px;">⭐ Opgrader til PRO — 49 kr/måned</button>
+          </div>
+
+          <button class="btn-danger" onclick="handleLogout()" style="margin-top:24px;">Log ud</button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- BOTTOM TAB BAR -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" data-tab="showplaner" onclick="navigateTo('showplaner')">
+        <span class="nav-icon">🏆</span>
+        <span class="nav-label">Showplaner</span>
+      </div>
+      <div class="nav-item" data-tab="heste" onclick="navigateTo('heste')">
+        <span class="nav-icon">🐴</span>
+        <span class="nav-label">Mine heste</span>
+      </div>
+      <div class="nav-item" data-tab="kalender" onclick="navigateTo('kalender')">
+        <span class="nav-icon">📅</span>
+        <span class="nav-label">Kalender</span>
+      </div>
+      <div class="nav-item" data-tab="profil" onclick="navigateTo('profil')">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">Profil</span>
+      </div>
+    </nav>
+
+  </div>
+
+  <!-- ========== PRO MODAL ========== -->
+  <div class="modal-overlay" id="pro-modal" style="display:none;" onclick="closeProModal(event)">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="pro-modal-content">
+        <div class="pro-modal-badge">⭐ PRO</div>
+        <h2>PaddockAI PRO</h2>
+        <p class="pro-modal-price">49 kr<span>/måned</span></p>
+        <div class="pro-modal-features">
+          <div class="pmf-item">✓ Ubegrænsede ryttere per liste</div>
+          <div class="pmf-item">✓ Ubegrænsede lister</div>
+          <div class="pmf-item">✓ "Mine ryttere" — gem faste favoritter</div>
+          <div class="pmf-item">✓ Notifikationer om ændringer</div>
+          <div class="pmf-item">✓ Del lister med ryttere</div>
+          <div class="pmf-item">✓ Eksportér startlister til PDF</div>
+        </div>
+        <button class="pro-activate-btn" onclick="activatePro()">Aktiver PRO (kommer snart)</button>
+        <button class="btn-secondary" onclick="closeProModal()" style="margin-top:8px;">Fortsæt gratis</button>
       </div>
     </div>
   </div>
 
-  <footer style="text-align:center; padding:32px 0 16px; color:#48484a; font-size:0.75rem; letter-spacing:0.02em;">
-    Made by <span style="color:#86868b; font-weight:600;">LeeP Media</span>
+  <!-- ========== FREE LIMIT MODAL ========== -->
+  <div class="modal-overlay" id="limit-modal" style="display:none;" onclick="closeLimitModal(event)">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="limit-modal-content">
+        <h2>Du har nået grænsen</h2>
+        <p>Gratis plan tillader maks 3 ryttere per liste.</p>
+        <button class="pro-activate-btn" onclick="closeLimitModal(); showProModal();">Opgrader til PRO — 49 kr/måned</button>
+        <button class="btn-secondary" onclick="closeLimitModal()" style="margin-top:8px;">Fortsæt gratis med 3 ryttere</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== RIDER DETAIL OVERLAY ========== -->
+  <div class="modal-overlay" id="rider-detail-overlay" style="display:none;" onclick="closeRiderDetail(event)">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div id="rider-detail-content"></div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    Made by <span style="color:var(--accent); font-weight:600;">LeeP Media</span>
   </footer>
 
+  <!-- ========== TOAST ========== -->
+  <div id="app-toast"></div>
+
   <script>
+    // ===== STATE =====
+    let currentUser = null;
     let currentShows = [];
     let currentRiders = [];
     let currentListId = null;
     let currentListData = null;
+    let lastScheduleData = null;
+    let allTimelineEntries = [];
+    let sseConnection = null;
+    let countdownInterval = null;
+    let currentTab = 'showplaner';
 
-    // Init
+    // ===== INIT =====
     async function init() {
-      // Check if URL has list id
-      const params = new URLSearchParams(location.search);
-      if (params.get('list')) {
-        await viewList(params.get('list'));
+      const savedUser = localStorage.getItem('paddock_user');
+      if (savedUser) {
+        try {
+          currentUser = JSON.parse(savedUser);
+          // Verify user still exists on server
+          const res = await fetch('/api/users/' + encodeURIComponent(currentUser.email));
+          if (res.ok) {
+            currentUser = await res.json();
+            localStorage.setItem('paddock_user', JSON.stringify(currentUser));
+            enterApp();
+            return;
+          }
+        } catch {}
+        // Server check failed, but we have local data — still enter
+        enterApp();
         return;
       }
-      await loadShows();
+      showScreen('onboarding');
+    }
+
+    function showScreen(name) {
+      document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+      const el = document.getElementById('screen-' + name);
+      if (el) el.style.display = '';
+    }
+
+    // ===== AUTH =====
+    async function handleRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      if (!name || !email) return;
+
+      const btn = document.getElementById('reg-submit-btn');
+      btn.disabled = true; btn.textContent = 'Opretter konto...';
+
+      try {
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email })
+        });
+        const user = await res.json();
+        if (user.error) throw new Error(user.error);
+
+        // Save avatar if selected
+        const avatarData = document.getElementById('reg-avatar-preview').dataset.avatar;
+        if (avatarData) user.avatarData = avatarData;
+
+        currentUser = user;
+        localStorage.setItem('paddock_user', JSON.stringify(currentUser));
+        enterApp();
+      } catch (err) {
+        alert('Fejl: ' + err.message);
+        btn.disabled = false; btn.textContent = 'Opret konto';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      if (!email) return;
+
+      const btn = document.getElementById('login-submit-btn');
+      btn.disabled = true; btn.textContent = 'Logger ind...';
+
+      try {
+        const res = await fetch('/api/users/' + encodeURIComponent(email));
+        if (!res.ok) {
+          alert('Ingen konto fundet med denne email. Opret en ny konto.');
+          btn.disabled = false; btn.textContent = 'Log ind';
+          return;
+        }
+        currentUser = await res.json();
+        localStorage.setItem('paddock_user', JSON.stringify(currentUser));
+        enterApp();
+      } catch (err) {
+        alert('Fejl: ' + err.message);
+        btn.disabled = false; btn.textContent = 'Log ind';
+      }
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem('paddock_user');
+      if (sseConnection) { sseConnection.close(); sseConnection = null; }
+      showScreen('onboarding');
+    }
+
+    function handleAvatarSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const preview = document.getElementById('reg-avatar-preview');
+        preview.style.backgroundImage = `url(${ev.target.result})`;
+        preview.dataset.avatar = ev.target.result;
+        preview.querySelector('span').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Update initials preview as user types
+    document.addEventListener('DOMContentLoaded', () => {
+      const nameInput = document.getElementById('reg-name');
+      nameInput?.addEventListener('input', () => {
+        const initials = getInitials(nameInput.value);
+        const el = document.getElementById('reg-avatar-initials');
+        if (el) el.textContent = initials;
+      });
+    });
+
+    function getInitials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+
+    // ===== ENTER APP =====
+    function enterApp() {
+      showScreen('app');
+      updateHeader();
+      updateProfilePage();
+
+      const params = new URLSearchParams(location.search);
+      if (params.get('share')) {
+        handleShareLink(params.get('share'));
+        return;
+      }
+      if (params.get('list')) {
+        viewList(params.get('list'));
+        return;
+      }
+
+      loadShows();
       loadSavedLists();
     }
 
+    async function handleShareLink(token) {
+      try {
+        const res = await fetch('/api/shared/' + encodeURIComponent(token));
+        const data = await res.json();
+        if (data.listId) { await viewList(data.listId); return; }
+      } catch {}
+      showToast('Delt hold ikke fundet', 2500);
+      loadShows();
+      loadSavedLists();
+    }
+
+    function updateHeader() {
+      if (!currentUser) return;
+      const avatarEl = document.getElementById('header-avatar');
+      const usernameEl = document.getElementById('header-username');
+      usernameEl.textContent = currentUser.name;
+
+      if (currentUser.avatarData) {
+        avatarEl.style.backgroundImage = `url(${currentUser.avatarData})`;
+        avatarEl.textContent = '';
+      } else {
+        avatarEl.style.backgroundImage = '';
+        avatarEl.textContent = getInitials(currentUser.name);
+      }
+    }
+
+    function updateProfilePage() {
+      if (!currentUser) return;
+      const avatarEl = document.getElementById('profile-avatar-large');
+      if (currentUser.avatarData) {
+        avatarEl.style.backgroundImage = `url(${currentUser.avatarData})`;
+        avatarEl.textContent = '';
+      } else {
+        avatarEl.style.backgroundImage = '';
+        avatarEl.textContent = getInitials(currentUser.name);
+      }
+      document.getElementById('profile-name').textContent = currentUser.name;
+      document.getElementById('profile-email').textContent = currentUser.email;
+
+      const isPro = currentUser.plan === 'pro';
+      const badge = document.getElementById('profile-plan-badge');
+      badge.textContent = isPro ? 'PRO' : 'GRATIS';
+      badge.className = 'profile-plan-badge' + (isPro ? ' pro' : '');
+      document.getElementById('profile-plan-text').textContent = isPro ? 'PRO (49 kr/md)' : 'Gratis';
+
+      if (currentUser.createdAt) {
+        const d = new Date(currentUser.createdAt);
+        document.getElementById('profile-member-since').textContent =
+          d.toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+    }
+
+    // ===== NAVIGATION =====
+    function navigateTo(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+      document.getElementById('tab-' + tab).style.display = '';
+      document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.toggle('active', n.dataset.tab === tab);
+      });
+      closeUserMenu();
+    }
+
+    function toggleUserMenu() {
+      const dd = document.getElementById('user-dropdown');
+      dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    }
+    function closeUserMenu() {
+      document.getElementById('user-dropdown').style.display = 'none';
+    }
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.header-right')) closeUserMenu();
+    });
+
+    // ===== SHOWPLANER SUB-PAGES =====
+    function showSpPage(page) {
+      document.getElementById('sp-page-create').style.display = page === 'create' ? '' : 'none';
+      document.getElementById('sp-page-view').style.display = page === 'view' ? '' : 'none';
+      if (page === 'create') {
+        history.replaceState(null, '', location.pathname);
+        if (sseConnection) { sseConnection.close(); sseConnection = null; }
+        document.getElementById('sync-indicator').style.display = 'none';
+        document.getElementById('share-banner').style.display = 'none';
+        if (!currentShows.length) loadShows();
+        clearShowSelection();
+        loadSavedLists();
+      }
+    }
+
+    // ===== SSE =====
+    function connectSSE(listId) {
+      if (sseConnection) { sseConnection.close(); sseConnection = null; }
+      const es = new EventSource('/api/lists/' + listId + '/events');
+      sseConnection = es;
+      es.addEventListener('connected', () => {
+        document.getElementById('sync-indicator').style.display = 'block';
+      });
+      es.addEventListener('riders-updated', () => viewList(listId));
+      es.onerror = () => {
+        document.getElementById('sync-indicator').style.display = 'none';
+      };
+    }
+
+    // ===== SHARE =====
+    async function shareRider() {
+      showToast('Del med rytter er en PRO-funktion ⭐', 2500);
+    }
+
+    async function shareList() {
+      if (!currentListId) return;
+      try {
+        const res = await fetch('/api/lists/' + currentListId + '/share', { method: 'POST' });
+        const data = await res.json();
+        const shareUrl = location.origin + '/?share=' + data.shareToken;
+        document.getElementById('share-url').value = shareUrl;
+        document.getElementById('share-banner').style.display = 'block';
+        if (navigator.share) {
+          try { await navigator.share({ title: 'PaddockAI Hold', url: shareUrl }); } catch {}
+        }
+      } catch (err) { alert('Fejl: ' + err.message); }
+    }
+
+    function copyShareUrl() {
+      navigator.clipboard.writeText(document.getElementById('share-url').value).then(() => {
+        const btn = document.getElementById('copy-share-btn');
+        btn.textContent = '✅ Kopieret!';
+        setTimeout(() => { btn.textContent = '📋 Kopiér'; }, 2000);
+      });
+    }
+
+    // ===== SHOWS =====
     async function loadShows() {
       try {
         const res = await fetch('/api/shows');
         currentShows = await res.json();
-        const sel = document.getElementById('show-select');
-        sel.innerHTML = '<option value="">Vælg stævne...</option>';
-        for (const s of currentShows) {
-          const opt = document.createElement('option');
-          opt.value = s.id;
-          opt.textContent = `${s.name} (${s.startDate} – ${s.endDate})`;
-          sel.appendChild(opt);
-        }
-        sel.onchange = () => {
-          currentRiders = [];
-          selectedRiderIds.clear();
-          const section = document.getElementById('riders-section');
-          if (sel.value) {
-            section.style.display = 'block';
-            document.getElementById('rider-list').innerHTML = '<li style="color:#888; padding:12px;">Tryk på søgefeltet for at hente ryttere</li>';
-            document.getElementById('riders-loaded').value = '';
-          } else {
-            section.style.display = 'none';
-          }
-        };
-      } catch (err) {
-        console.error(err);
-        document.getElementById('show-select').innerHTML = '<option>Fejl ved indlæsning</option>';
+        updateShowSearchPlaceholder();
+      } catch {
+        document.getElementById('show-search').placeholder = 'Fejl ved indlæsning';
       }
     }
 
+    let currentDiscipline = 'all';
+    function setDiscipline(disc) {
+      currentDiscipline = disc;
+      document.querySelectorAll('.disc-btn').forEach(b => b.classList.toggle('active', b.dataset.discipline === disc));
+      updateShowSearchPlaceholder();
+      renderShowDropdown(document.getElementById('show-search').value);
+      document.getElementById('show-dropdown').style.display = 'block';
+    }
+
+    function updateShowSearchPlaceholder() {
+      const count = currentShows.filter(s => {
+        if (currentDiscipline === 'all') return true;
+        return (s.disciplines && s.disciplines.includes(currentDiscipline)) || s.discipline === currentDiscipline;
+      }).length;
+      const labels = { all: '', show_jumping: 'spring-', dressage: 'dressur-', eventing: 'military-' };
+      document.getElementById('show-search').placeholder = `🔍 Søg blandt ${count} ${labels[currentDiscipline] || ''}stævner...`;
+    }
+
+    function renderShowDropdown(filter = '') {
+      const dd = document.getElementById('show-dropdown');
+      dd.innerHTML = '';
+      const f = filter.toLowerCase();
+      const matches = currentShows.filter(s => {
+        const textMatch = !f || s.name.toLowerCase().includes(f) || (s.startDate || '').includes(f);
+        const discMatch = currentDiscipline === 'all' || (s.disciplines && s.disciplines.includes(currentDiscipline)) || s.discipline === currentDiscipline;
+        return textMatch && discMatch;
+      });
+      if (!matches.length) {
+        dd.innerHTML = '<li class="dd-empty">Ingen stævner fundet</li>';
+        dd.style.display = 'block'; return;
+      }
+      for (const s of matches) {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="dd-name">${s.name}</span><span class="dd-meta">${s.startDate} – ${s.endDate}</span>`;
+        li.onmousedown = (e) => { e.preventDefault(); selectShow(s); };
+        dd.appendChild(li);
+      }
+      dd.style.display = 'block';
+    }
+
+    function selectShow(show) {
+      document.getElementById('show-select-value').value = show.id;
+      document.getElementById('show-search').value = '';
+      document.getElementById('show-dropdown').style.display = 'none';
+      document.getElementById('show-chip-inner').innerHTML =
+        `${show.name} (${show.startDate}) <span class="chip-remove" onclick="clearShowSelection()">&times;</span>`;
+      document.getElementById('show-selected-chip').style.display = 'block';
+      document.getElementById('show-search-wrapper').style.display = 'none';
+      currentRiders = [];
+      riderSelections = {};
+      document.getElementById('riders-section').style.display = 'block';
+      document.getElementById('rider-list').innerHTML = '<li class="dd-empty">Tryk på søgefeltet for at hente ryttere</li>';
+      document.getElementById('riders-loaded').value = '';
+    }
+
+    function clearShowSelection() {
+      document.getElementById('show-select-value').value = '';
+      document.getElementById('show-selected-chip').style.display = 'none';
+      document.getElementById('show-search-wrapper').style.display = 'block';
+      document.getElementById('riders-section').style.display = 'none';
+      currentRiders = []; riderSelections = {};
+      expandedRiders.clear(); expandedHorses.clear();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const ss = document.getElementById('show-search');
+      ss.addEventListener('focus', () => renderShowDropdown(ss.value));
+      ss.addEventListener('input', () => renderShowDropdown(ss.value));
+      ss.addEventListener('blur', () => setTimeout(() => { document.getElementById('show-dropdown').style.display = 'none'; }, 200));
+    });
+
+    // ===== RIDERS LOADING =====
     async function loadRiders(showId) {
-      const section = document.getElementById('riders-section');
       const list = document.getElementById('rider-list');
       const loading = document.getElementById('riders-loading');
-      section.style.display = 'block';
-      list.innerHTML = '';
-      loading.style.display = 'block';
-
+      document.getElementById('riders-section').style.display = 'block';
+      list.innerHTML = ''; loading.style.display = 'block';
       try {
         const res = await fetch(`/api/shows/${showId}/riders`);
         currentRiders = await res.json();
         loading.style.display = 'none';
         renderRiders();
-      } catch (err) {
-        loading.textContent = 'Fejl ved indlæsning af ryttere';
-        console.error(err);
-      }
+      } catch { loading.textContent = 'Fejl ved indlæsning af ryttere'; }
     }
 
-    const selectedRiderIds = new Set();
+    // ===== GRANULAR SELECTION =====
+    let riderSelections = {};
+    const expandedRiders = new Set();
+    const expandedHorses = new Set();
+
+    function getRiderHorses(rider) {
+      const h = {};
+      for (const e of (rider.entries || [])) {
+        const n = e.horseName || 'Ukendt hest';
+        if (!h[n]) h[n] = [];
+        h[n].push(e);
+      }
+      return h;
+    }
+
+    function isRiderFullySelected(rider) {
+      const sel = riderSelections[rider.id];
+      if (!sel) return false;
+      const horses = getRiderHorses(rider);
+      for (const [h, entries] of Object.entries(horses)) {
+        if (!sel[h] || sel[h].size !== entries.length) return false;
+      }
+      return true;
+    }
+    function isRiderPartiallySelected(rider) { return !!riderSelections[rider.id] && !isRiderFullySelected(rider); }
+    function isHorseFullySelected(rider, horseName) {
+      const sel = riderSelections[rider.id];
+      if (!sel || !sel[horseName]) return false;
+      return sel[horseName].size === (rider.entries || []).filter(e => (e.horseName || 'Ukendt hest') === horseName).length;
+    }
+    function isClassSelected(riderId, horseName, csId) { return riderSelections[riderId]?.[horseName]?.has(csId) || false; }
+
+    function toggleRiderAll(rider, checked) {
+      if (checked) {
+        riderSelections[rider.id] = {};
+        for (const e of (rider.entries || [])) {
+          const h = e.horseName || 'Ukendt hest';
+          if (!riderSelections[rider.id][h]) riderSelections[rider.id][h] = new Set();
+          riderSelections[rider.id][h].add(e.classSectionId);
+        }
+      } else { delete riderSelections[rider.id]; }
+      rerenderRiderItem(rider);
+      updateCount();
+    }
+
+    function toggleHorseAll(rider, horseName, checked) {
+      if (!riderSelections[rider.id]) riderSelections[rider.id] = {};
+      if (checked) {
+        const entries = (rider.entries || []).filter(e => (e.horseName || 'Ukendt hest') === horseName);
+        riderSelections[rider.id][horseName] = new Set(entries.map(e => e.classSectionId));
+      } else {
+        delete riderSelections[rider.id][horseName];
+        if (!Object.keys(riderSelections[rider.id]).length) delete riderSelections[rider.id];
+      }
+      rerenderRiderItem(rider); updateCount();
+    }
+
+    function toggleClassEntry(rider, horseName, csId, checked) {
+      if (!riderSelections[rider.id]) riderSelections[rider.id] = {};
+      if (!riderSelections[rider.id][horseName]) riderSelections[rider.id][horseName] = new Set();
+      if (checked) riderSelections[rider.id][horseName].add(csId);
+      else {
+        riderSelections[rider.id][horseName].delete(csId);
+        if (!riderSelections[rider.id][horseName].size) delete riderSelections[rider.id][horseName];
+        if (!Object.keys(riderSelections[rider.id]).length) delete riderSelections[rider.id];
+      }
+      rerenderRiderItem(rider); updateCount();
+    }
+
+    function getSelectionsPayload() {
+      const result = {};
+      for (const [riderId, horses] of Object.entries(riderSelections)) {
+        const rider = currentRiders.find(r => r.id === Number(riderId));
+        if (!rider) continue;
+        if (isRiderFullySelected(rider)) { result[riderId] = 'all'; continue; }
+        result[riderId] = {};
+        for (const [horseName, csIds] of Object.entries(horses)) {
+          result[riderId][horseName] = isHorseFullySelected(rider, horseName) ? 'all' : [...csIds];
+        }
+      }
+      return result;
+    }
+
+    // ===== FREE PLAN LIMITS =====
+    function checkFreeLimit() {
+      if (currentUser && currentUser.plan === 'pro') return true;
+      const riderCount = Object.keys(riderSelections).length;
+      if (riderCount >= 3) {
+        document.getElementById('limit-modal').style.display = 'flex';
+        return false;
+      }
+      return true;
+    }
+
+    function checkListLimit(existingCount) {
+      if (currentUser && currentUser.plan === 'pro') return true;
+      if (existingCount >= 3) {
+        showToast('Gratis plan tillader maks 3 lister. Opgrader til PRO! ⭐', 3000);
+        return false;
+      }
+      return true;
+    }
+
+    function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;'); }
+
+    function formatEntryTime(e) {
+      if (!e.classStartAt) return '';
+      const m = String(e.classStartAt).match(/(\d{2}):(\d{2})/);
+      return m ? `${m[1]}.${m[2]}` : '';
+    }
+    function formatEntryDate(e) {
+      if (!e.date) return '';
+      const d = new Date(e.date + 'T00:00:00');
+      return ['Søn','Man','Tir','Ons','Tor','Fre','Lør'][d.getDay()];
+    }
+
+    function renderRiderItemHTML(r) {
+      const horses = getRiderHorses(r);
+      const horseNames = Object.keys(horses);
+      const needsTree = horseNames.length > 1 || horseNames.some(h => horses[h].length > 1);
+      const rFull = isRiderFullySelected(r);
+      const rPartial = isRiderPartiallySelected(r);
+      const rExpanded = expandedRiders.has(r.id);
+      const totalEntries = (r.entries || []).length;
+      const selectedCount = Object.values(riderSelections[r.id] || {}).reduce((n, s) => n + s.size, 0);
+      let metaText = '';
+      if (needsTree) {
+        metaText = `${horseNames.length} hest${horseNames.length > 1 ? 'e' : ''} · ${totalEntries} start${totalEntries > 1 ? 'er' : ''}${rPartial ? ' · ' + selectedCount + ' valgt' : ''}`;
+      } else {
+        const e = (r.entries || [])[0];
+        const horseName = horseNames[0] || '';
+        const time = e ? formatEntryTime(e) : '';
+        const day = e ? formatEntryDate(e) : '';
+        const className = e ? (e.classNo ? 'Kl. ' + e.classNo + ' - ' : '') + (e.className || '') : '';
+        metaText = `🐴 ${horseName}${className ? ' · ' + day + ' ' + time + ' ' + className : ''}`;
+      }
+      let html = `<div class="rider-tree-row" data-action="toggle-rider" data-rider-id="${r.id}">
+        <input type="checkbox" ${rFull ? 'checked' : ''} data-check="rider" data-rider-id="${r.id}">
+        ${rPartial ? '<span class="partial-indicator"></span>' : ''}
+        <span class="tree-label">${escAttr(r.name)}<span class="club">${escAttr(r.club || '')}</span>${metaText ? '<span class="tree-meta">' + metaText + '</span>' : ''}</span>
+        ${needsTree ? `<span class="rider-tree-toggle ${rExpanded ? 'open' : ''}">▶</span>` : ''}
+      </div>`;
+      if (needsTree) {
+        html += `<div class="rider-tree-children ${rExpanded ? 'open' : ''}">`;
+        for (const horseName of horseNames) {
+          const hEntries = horses[horseName];
+          const hFull = isHorseFullySelected(r, horseName);
+          const hSel = riderSelections[r.id]?.[horseName];
+          const hPartial = hSel && hSel.size > 0 && !hFull;
+          const hKey = r.id + ':' + horseName;
+          const hExpanded = expandedHorses.has(hKey);
+          const hasMulti = hEntries.length > 1;
+          html += `<div class="rider-tree-row" data-action="toggle-horse" data-rider-id="${r.id}" data-horse="${escAttr(horseName)}">
+            <input type="checkbox" ${hFull ? 'checked' : ''} data-check="horse" data-rider-id="${r.id}" data-horse="${escAttr(horseName)}">
+            ${hPartial ? '<span class="partial-indicator"></span>' : ''}
+            <span class="tree-label tree-horse-label">🐴 ${escAttr(horseName)}${hasMulti ? ' <span style="color:var(--text3)">(' + hEntries.length + ' klasser)</span>' : ' <span style="color:var(--text3)"> · ' + formatEntryDate(hEntries[0]) + ' ' + formatEntryTime(hEntries[0]) + ' ' + (hEntries[0].classNo ? 'Kl. ' + hEntries[0].classNo + ' - ' : '') + escAttr(hEntries[0].className) + '</span>'}</span>
+            ${hasMulti ? `<span class="rider-tree-toggle ${hExpanded ? 'open' : ''}">▶</span>` : ''}
+          </div>`;
+          if (hasMulti) {
+            html += `<div class="rider-tree-children ${hExpanded ? 'open' : ''}">`;
+            for (const e of hEntries) {
+              const cSel = isClassSelected(r.id, horseName, e.classSectionId);
+              html += `<div class="rider-tree-row">
+                <input type="checkbox" ${cSel ? 'checked' : ''} data-check="class" data-rider-id="${r.id}" data-horse="${escAttr(horseName)}" data-cs-id="${e.classSectionId}">
+                <span class="tree-label tree-class-label"><span class="tree-class-time">${formatEntryDate(e)} ${formatEntryTime(e)}</span> ${e.classNo ? 'Kl. ' + e.classNo + ' - ' : ''}${escAttr(e.className)}</span>
+              </div>`;
+            }
+            html += '</div>';
+          }
+        }
+        html += '</div>';
+      }
+      return html;
+    }
+
+    function rerenderRiderItem(rider) {
+      const li = document.querySelector(`#rider-list [data-rider-item="${rider.id}"]`) ||
+                 document.querySelector(`#add-rider-list [data-rider-item="${rider.id}"]`);
+      if (li) li.innerHTML = renderRiderItemHTML(rider);
+    }
+
+    function findRiderForEvent(riderId, targetEl) {
+      const inAdd = targetEl.closest('#add-rider-list');
+      return inAdd ? addRiders.find(r => r.id === riderId) : currentRiders.find(r => r.id === riderId);
+    }
+
+    // Event delegation for tree clicks
+    document.addEventListener('click', function(e) {
+      const cb = e.target.closest('[data-check]');
+      if (cb) {
+        e.stopPropagation();
+        const riderId = Number(cb.dataset.riderId);
+        const rider = findRiderForEvent(riderId, cb);
+        if (!rider) return;
+        const inAdd = cb.closest('#add-rider-list');
+        let origSel, origRiders;
+        if (inAdd) { origSel = riderSelections; origRiders = currentRiders; riderSelections = addRiderSelections; currentRiders = addRiders; }
+
+        // Free plan: check limit before allowing adding a NEW rider
+        if (cb.dataset.check === 'rider' && cb.checked && !inAdd) {
+          if (!riderSelections[riderId] && !checkFreeLimit()) {
+            cb.checked = false;
+            if (inAdd) { riderSelections = origSel; currentRiders = origRiders; }
+            return;
+          }
+        }
+
+        if (cb.dataset.check === 'rider') toggleRiderAllDirect(rider, cb.checked);
+        else if (cb.dataset.check === 'horse') toggleHorseAll(rider, cb.dataset.horse, cb.checked);
+        else if (cb.dataset.check === 'class') toggleClassEntry(rider, cb.dataset.horse, Number(cb.dataset.csId), cb.checked);
+        if (inAdd) { addRiderSelections = riderSelections; riderSelections = origSel; currentRiders = origRiders; showUpdateBtn(); }
+        return;
+      }
+      const row = e.target.closest('[data-action]');
+      if (row && e.target.tagName !== 'INPUT') {
+        const riderId = Number(row.dataset.riderId);
+        const action = row.dataset.action;
+        if (action === 'toggle-rider') {
+          if (expandedRiders.has(riderId)) expandedRiders.delete(riderId); else expandedRiders.add(riderId);
+        } else if (action === 'toggle-horse') {
+          const key = riderId + ':' + row.dataset.horse;
+          if (expandedHorses.has(key)) expandedHorses.delete(key); else expandedHorses.add(key);
+        }
+        const rider = findRiderForEvent(riderId, row);
+        if (rider) rerenderRiderItem(rider);
+      }
+    });
+
+    function toggleRiderAllDirect(rider, checked) {
+      if (checked) {
+        riderSelections[rider.id] = {};
+        for (const e of (rider.entries || [])) {
+          const h = e.horseName || 'Ukendt hest';
+          if (!riderSelections[rider.id][h]) riderSelections[rider.id][h] = new Set();
+          riderSelections[rider.id][h].add(e.classSectionId);
+        }
+      } else delete riderSelections[rider.id];
+      rerenderRiderItem(rider); updateCount();
+    }
 
     function renderRiders(filter = '') {
       const list = document.getElementById('rider-list');
@@ -427,112 +974,124 @@
       for (const r of currentRiders) {
         if (f && !r.name.toLowerCase().includes(f) && !(r.club || '').toLowerCase().includes(f)) continue;
         const li = document.createElement('li');
-        const checked = selectedRiderIds.has(r.id) ? 'checked' : '';
-        li.innerHTML = `
-          <input type="checkbox" id="r${r.id}" data-rider-id="${r.id}" ${checked} onchange="toggleRider(${r.id}, this.checked)">
-          <label for="r${r.id}">${r.name} <span class="club">${r.club || ''}</span></label>
-        `;
+        li.className = 'rider-tree-item';
+        li.setAttribute('data-rider-item', r.id);
+        li.innerHTML = renderRiderItemHTML(r);
         list.appendChild(li);
       }
       updateCount();
     }
 
-    function toggleRider(id, checked) {
-      if (checked) selectedRiderIds.add(id);
-      else selectedRiderIds.delete(id);
-      updateCount();
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
-      const searchField = document.getElementById('rider-search');
-      searchField?.addEventListener('focus', async () => {
-        const showId = document.getElementById('show-select').value;
+      const sf = document.getElementById('rider-search');
+      sf?.addEventListener('focus', async () => {
+        const showId = document.getElementById('show-select-value').value;
         if (!showId) return;
-
         if (document.getElementById('riders-loaded').value !== showId) {
           await loadRiders(showId);
           document.getElementById('riders-loaded').value = showId;
         }
-        renderRiders(searchField.value);
+        renderRiders(sf.value);
       });
-      searchField?.addEventListener('input', e => renderRiders(e.target.value));
+      sf?.addEventListener('input', e => renderRiders(e.target.value));
     });
 
     function selectAll() {
-      document.querySelectorAll('#rider-list input[type=checkbox]').forEach(cb => {
-        cb.checked = true;
-        selectedRiderIds.add(Number(cb.dataset.riderId));
-      });
-      updateCount();
+      const maxRiders = (currentUser && currentUser.plan === 'pro') ? Infinity : 3;
+      let count = 0;
+      for (const r of currentRiders) {
+        if (count >= maxRiders) break;
+        toggleRiderAll(r, true);
+        count++;
+      }
+      if (count >= maxRiders && currentRiders.length > maxRiders) {
+        showToast('Gratis plan: maks 3 ryttere valgt', 2000);
+      }
     }
-    function selectNone() {
-      selectedRiderIds.clear();
-      document.querySelectorAll('#rider-list input[type=checkbox]').forEach(cb => cb.checked = false);
-      updateCount();
-    }
+    function selectNone() { riderSelections = {}; renderRiders(document.getElementById('rider-search')?.value || ''); }
 
+    function getSelectedRiderCount() { return Object.keys(riderSelections).length; }
+    function getSelectedEntryCount() {
+      let n = 0;
+      for (const horses of Object.values(riderSelections)) for (const csIds of Object.values(horses)) n += csIds.size;
+      return n;
+    }
     function updateCount() {
-      document.getElementById('selected-count').textContent = selectedRiderIds.size;
-      document.getElementById('create-btn').disabled = selectedRiderIds.size === 0;
+      const rc = getSelectedRiderCount(), ec = getSelectedEntryCount();
+      const label = ec !== rc ? `${rc} ryttere, ${ec} starter` : `${rc} ryttere`;
+      document.getElementById('selected-count').textContent = label;
+      document.getElementById('create-btn').disabled = rc === 0;
     }
 
+    // ===== CREATE LIST =====
     async function createList() {
-      const showId = document.getElementById('show-select').value;
+      const showId = document.getElementById('show-select-value').value;
       const show = currentShows.find(s => s.id == showId);
-      const riderIds = [...selectedRiderIds];
+      const riderIds = Object.keys(riderSelections).map(Number);
+      const selections = getSelectionsPayload();
+      const listName = document.getElementById('list-name-input').value.trim();
+
+      // Check list count limit
+      try {
+        const listsRes = await fetch('/api/lists');
+        const lists = await listsRes.json();
+        if (!checkListLimit(lists.length)) return;
+      } catch {}
 
       const btn = document.getElementById('create-btn');
-      btn.disabled = true;
-      btn.textContent = 'Opretter...';
-
+      btn.disabled = true; btn.textContent = 'Opretter...';
       try {
         const res = await fetch('/api/lists', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            showId: Number(showId),
-            showName: show.name,
-            startDate: show.startDate,
-            endDate: show.endDate,
-            riderIds
-          })
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ showId: Number(showId), showName: show.name, listName: listName || show.name, startDate: show.startDate, endDate: show.endDate, riderIds, selections })
         });
         const list = await res.json();
-        saveTolocalStorage(list);
         await viewList(list.id);
       } catch (err) {
         alert('Fejl: ' + err.message);
-        btn.disabled = false;
-        btn.textContent = `Opret filmliste (${riderIds.length} ryttere)`;
+        btn.disabled = false; btn.textContent = `Opret hold (${riderIds.length} ryttere)`;
       }
     }
 
-    function saveTolocalStorage(list) {
-      const saved = JSON.parse(localStorage.getItem('filmLists') || '[]');
-      saved.unshift({ id: list.id, showName: list.showName, startDate: list.startDate, endDate: list.endDate, createdAt: list.createdAt });
-      localStorage.setItem('filmLists', JSON.stringify(saved.slice(0, 50)));
-    }
-
-    function loadSavedLists() {
-      const saved = JSON.parse(localStorage.getItem('filmLists') || '[]');
+    // ===== SAVED LISTS =====
+    let editMode = false;
+    async function loadSavedLists() {
       const container = document.getElementById('saved-lists');
-      if (saved.length === 0) { container.innerHTML = ''; return; }
-      container.innerHTML = '<h3>Gemte filmlister</h3>';
-      for (const s of saved) {
-        container.innerHTML += `
-          <a class="list-link" href="?list=${s.id}">
-            <div class="list-name">${s.showName}</div>
-            <div class="list-date">${s.startDate} – ${s.endDate}</div>
-          </a>
-        `;
-      }
+      try {
+        const res = await fetch('/api/lists');
+        const lists = await res.json();
+        if (!lists.length) { container.innerHTML = ''; return; }
+        let html = `<div class="saved-lists-header"><h3>Dine hold</h3>
+          <button class="btn-secondary edit-lists-btn ${editMode ? 'active' : ''}" onclick="toggleEditMode()">Rediger</button></div>`;
+        for (const s of lists) {
+          html += `<div class="list-item ${editMode ? 'show-delete' : ''}">
+            <div class="list-item-inner">
+              <a class="list-link" href="?list=${s.id}">
+                <div class="list-name">${s.listName || s.showName}</div>
+                <div class="list-meta"><span>${s.showName}</span> <span>${s.startDate} – ${s.endDate}</span> <span>${s.riderCount} ryttere</span></div>
+              </a>
+            </div>
+            <button class="list-delete-btn" onclick="deleteList('${s.id}')">Slet</button>
+          </div>`;
+        }
+        container.innerHTML = html;
+      } catch { container.innerHTML = ''; }
     }
 
+    function toggleEditMode() {
+      editMode = !editMode;
+      document.querySelectorAll('.list-item').forEach(el => el.classList.toggle('show-delete', editMode));
+      document.querySelector('.edit-lists-btn')?.classList.toggle('active', editMode);
+    }
+    async function deleteList(id) { await fetch('/api/lists/' + id, { method: 'DELETE' }); loadSavedLists(); }
+
+    // ===== VIEW LIST (DASHBOARD) =====
     async function viewList(listId) {
-      showPage('view');
+      navigateTo('showplaner');
+      showSpPage('view');
       currentListId = listId;
-      const content = document.getElementById('list-content');
-      content.innerHTML = '<div class="loading">Henter filmliste</div>';
+      connectSSE(listId);
+      document.getElementById('rider-timeline').innerHTML = '<div class="loading">Henter hold</div>';
 
       try {
         const [listRes, schedRes] = await Promise.all([
@@ -541,162 +1100,195 @@
         ]);
         currentListData = await listRes.json();
         const sched = await schedRes.json();
+        lastScheduleData = sched;
 
         history.replaceState(null, '', `?list=${listId}`);
-        renderSchedule(sched, currentListData);
+        buildTimeline(sched);
+        renderFullSchedule(sched);
 
-        // Load riders for selected list + "add more" section
-        const riderIdSet = new Set(currentListData.riderIds);
+        const selections = currentListData.selections;
+        const riderIdSet = selections ? new Set(Object.keys(selections).map(Number)) : new Set(currentListData.riderIds);
         const ridersRes = await fetch(`/api/shows/${currentListData.showId}/riders`);
         const allRiders = await ridersRes.json();
         renderSelectedRiders(allRiders, riderIdSet);
-        loadAddRiders(currentListData.showId, riderIdSet);
+        setupQuickAdd(currentListData.showId, riderIdSet, allRiders);
       } catch (err) {
-        content.innerHTML = `<p style="color:#e94560;">Fejl: ${err.message}</p>`;
+        document.getElementById('rider-timeline').innerHTML = `<p style="color:var(--danger);">Fejl: ${err.message}</p>`;
       }
     }
 
-    function formatDate(dateStr) {
-      const d = new Date(dateStr + 'T00:00:00');
-      const days = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'];
-      const months = ['januar', 'februar', 'marts', 'april', 'maj', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'december'];
-      return `${days[d.getDay()]} ${d.getDate()}. ${months[d.getMonth()]}`;
+    // ===== TIMELINE =====
+    function buildTimeline(sched) {
+      const entries = [];
+      for (const [date, classes] of Object.entries(sched.schedule)) {
+        for (const cls of classes) {
+          for (const r of cls.riders) {
+            let startTime = null;
+            if (r.startAt) {
+              const m = r.startAt.match(/(\d{4}-\d{2}-\d{2})[\sT](\d{2}):(\d{2})/);
+              if (m) startTime = new Date(`${m[1]}T${m[2]}:${m[3]}:00`);
+            }
+            if (!startTime && cls.time) {
+              const m2 = cls.time.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}):(\d{2})/);
+              if (m2) startTime = new Date(`${m2[1]}T${m2[2]}:${m2[3]}:00`);
+            }
+            entries.push({
+              date, riderName: r.riderName, horseName: r.horseName,
+              startNo: r.startNo, startTime,
+              className: cls.className, classNo: cls.classNo,
+              arena: cls.arena, classSectionId: cls.classSectionId
+            });
+          }
+        }
+      }
+      entries.sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+      allTimelineEntries = entries;
+      renderTimeline();
+      clearInterval(countdownInterval);
+      countdownInterval = setInterval(renderTimeline, 30000);
     }
 
-    function formatTime(timeStr) {
-      if (!timeStr) return '';
-      // Handle "2026-02-22 08:00:00 +0100" format
-      const match = timeStr.match(/(\d{2}):(\d{2}):\d{2}/);
-      if (match) return `${match[1]}.${match[2]}`;
-      // Fallback: try Date parsing
-      const d = new Date(timeStr);
-      if (!isNaN(d)) return `${String(d.getHours()).padStart(2,'0')}.${String(d.getMinutes()).padStart(2,'0')}`;
-      return '';
-    }
+    function renderTimeline() {
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+      const container = document.getElementById('rider-timeline');
+      const nextUpBox = document.getElementById('next-up-box');
 
-    function renderSchedule(sched, listData) {
-      const content = document.getElementById('list-content');
-      let html = `<h1>${sched.showName}</h1>`;
-      html += `<p style="color:#888; margin-bottom:16px;">${sched.startDate} – ${sched.endDate}</p>`;
+      let todayEntries = allTimelineEntries.filter(e => e.date === todayStr);
+      if (!todayEntries.length) {
+        const futureDates = [...new Set(allTimelineEntries.filter(e => e.date > todayStr).map(e => e.date))].sort();
+        if (futureDates.length) todayEntries = allTimelineEntries.filter(e => e.date === futureDates[0]);
+        else todayEntries = allTimelineEntries;
+      }
 
-      const dates = Object.keys(sched.schedule).sort();
-      if (dates.length === 0) {
-        html += '<p style="color:#888;">Ingen klasser fundet med valgte ryttere.</p>';
-        content.innerHTML = html;
+      if (!todayEntries.length) {
+        container.innerHTML = '<p style="color:var(--text3); text-align:center; padding:20px;">Ingen starter fundet</p>';
+        nextUpBox.style.display = 'none';
         return;
       }
 
+      let nextEntry = null;
+      for (const e of todayEntries) {
+        if (e.startTime && e.startTime > new Date(now.getTime() - 5 * 60000)) { nextEntry = e; break; }
+      }
+
+      if (nextEntry && nextEntry.startTime) {
+        const diffMin = Math.round((nextEntry.startTime - now) / 60000);
+        const urgency = diffMin < 5 ? 'red' : diffMin < 15 ? 'yellow' : 'green';
+        nextUpBox.className = `next-up-box urgency-${urgency}`;
+        nextUpBox.style.display = 'block';
+        document.getElementById('next-up-rider').textContent = nextEntry.riderName;
+        document.getElementById('next-up-horse').textContent = '🐴 ' + nextEntry.horseName;
+        document.getElementById('next-up-class').textContent =
+          (nextEntry.classNo ? 'Klasse ' + nextEntry.classNo + ' — ' : '') + nextEntry.className +
+          (nextEntry.arena ? ' · ' + formatArena(nextEntry.arena) : '');
+        const countdownEl = document.getElementById('next-up-countdown');
+        if (diffMin <= 0) { countdownEl.textContent = '🔴 Starter nu!'; countdownEl.className = 'next-up-countdown red'; }
+        else if (diffMin < 60) { countdownEl.textContent = `Starter om ${diffMin} min`; countdownEl.className = `next-up-countdown ${urgency}`; }
+        else { countdownEl.textContent = `Starter om ${Math.floor(diffMin/60)}t ${diffMin%60}min`; countdownEl.className = `next-up-countdown ${urgency}`; }
+      } else {
+        nextUpBox.style.display = 'none';
+      }
+
+      let html = '';
+      for (const e of todayEntries) {
+        const timeStr = e.startTime ? `${String(e.startTime.getHours()).padStart(2,'0')}.${String(e.startTime.getMinutes()).padStart(2,'0')}` : '—';
+        let status = '⏳', statusClass = '';
+        if (e.startTime) {
+          const diff = (e.startTime - now) / 60000;
+          if (diff < -10) { status = '✅'; statusClass = 'status-done'; }
+          else if (diff < 5) { status = '🔴'; statusClass = 'status-next'; }
+          else if (diff < 20) { status = '🟡'; statusClass = 'status-soon'; }
+        }
+        const classLabel = e.classNo ? 'Kl. ' + e.classNo : e.className;
+        const detailData = escAttr(JSON.stringify({ riderName: e.riderName, horseName: e.horseName, className: e.className, classNo: e.classNo, arena: e.arena, startNo: e.startNo, startTime: e.startTime, classSectionId: e.classSectionId }));
+        html += `<div class="rider-timeline-item ${statusClass}" onclick='showRiderDetail(${detailData})'>
+          <div class="rt-time">${timeStr}</div>
+          <div class="rt-info">
+            <div class="rt-rider">${escAttr(e.riderName)}</div>
+            <div class="rt-horse">🐴 ${escAttr(e.horseName)}</div>
+            <div class="rt-class">${classLabel}</div>
+          </div>
+          <div class="rt-status">${status}</div>
+        </div>`;
+      }
+      container.innerHTML = html;
+    }
+
+    // ===== RIDER DETAIL =====
+    function showRiderDetail(data) {
+      const overlay = document.getElementById('rider-detail-overlay');
+      const content = document.getElementById('rider-detail-content');
+      const timeStr = data.startTime ? new Date(data.startTime).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }) : '—';
+      content.innerHTML = `
+        <h2>${data.riderName}</h2>
+        <p style="color:var(--accent); margin-bottom:16px;">🐴 ${data.horseName}</p>
+        <div class="detail-row"><span class="detail-label">Klasse</span><span class="detail-value">${data.classNo ? 'Kl. ' + data.classNo + ' — ' : ''}${data.className}</span></div>
+        <div class="detail-row"><span class="detail-label">Starttid</span><span class="detail-value">${timeStr}</span></div>
+        <div class="detail-row"><span class="detail-label">Startnummer</span><span class="detail-value">${data.startNo || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Bane</span><span class="detail-value">${data.arena ? formatArena(data.arena) : '—'}</span></div>
+        ${data.classSectionId ? `<div style="margin-top:16px; text-align:center;"><a href="https://online.equipe.com/startlists/${data.classSectionId}" target="_blank" style="color:var(--accent); font-size:0.85rem;">Se startliste på Equipe →</a></div>` : ''}
+      `;
+      overlay.style.display = 'flex';
+    }
+
+    function closeRiderDetail(e) {
+      if (e.target === document.getElementById('rider-detail-overlay') || e.target.closest('.sheet-handle')) {
+        document.getElementById('rider-detail-overlay').style.display = 'none';
+      }
+    }
+
+    // ===== FULL SCHEDULE =====
+    function formatDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      return ['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'][d.getDay()] + ' ' +
+        d.getDate() + '. ' + ['januar','februar','marts','april','maj','juni','juli','august','september','oktober','november','december'][d.getMonth()];
+    }
+    function formatTime(timeStr) {
+      if (!timeStr) return '';
+      const m = timeStr.match(/(\d{2}):(\d{2}):\d{2}/);
+      return m ? `${m[1]}.${m[2]}` : '';
+    }
+    function formatArena(arena) {
+      if (!arena) return '';
+      const a = arena.toUpperCase();
+      if (a.includes('MASTERLIST') || a.includes('DELTAGER')) return '';
+      const am = arena.match(/ARENA\s+(\S+)/i);
+      if (am) return 'Arena ' + am[1].toUpperCase();
+      if (/BOXEN/i.test(arena)) return 'Boxen';
+      const parts = arena.trim().split(/\s+/);
+      const last = parts[parts.length - 1];
+      return last.charAt(0).toUpperCase() + last.slice(1).toLowerCase();
+    }
+
+    function renderFullSchedule(sched) {
+      const content = document.getElementById('list-content');
+      let html = `<h2 style="margin-top:12px;">${sched.showName}</h2>`;
+      html += `<p style="color:#888; margin-bottom:16px; font-size:0.85rem;">${sched.startDate} – ${sched.endDate}</p>`;
+      const dates = Object.keys(sched.schedule).sort();
+      if (!dates.length) { content.innerHTML = '<p style="color:#888;">Ingen klasser fundet.</p>'; return; }
+      const todayStr = new Date().toLocaleDateString('sv-SE');
       for (const date of dates) {
         const dayId = 'day-' + date;
-        html += `<div class="day-header" onclick="toggleDay('${dayId}')"><span>${formatDate(date)}</span><span class="toggle" id="toggle-${dayId}">▼</span></div>`;
-        html += `<div class="day-content" id="${dayId}">`;
+        const isPast = date < todayStr;
+        html += `<div class="day-header" onclick="toggleDay('${dayId}')"><span>${formatDate(date)}</span><span class="toggle" id="toggle-${dayId}">${isPast ? '▶' : '▼'}</span></div>`;
+        html += `<div class="day-content${isPast ? ' collapsed' : ''}" id="${dayId}">`;
         for (const cls of sched.schedule[date]) {
           const time = formatTime(cls.time);
+          const csId = cls.classSectionId || '';
+          const arenaLabel = formatArena(cls.arena);
+          const equipeUrl = csId ? `https://online.equipe.com/startlists/${csId}` : '#';
           html += `<div class="class-entry">`;
-          const equipeUrl = cls.classSectionId ? `https://online.equipe.com/startlists/${cls.classSectionId}` : '#';
-          html += `<div class="class-time"><a href="${equipeUrl}" target="_blank" style="color:inherit; text-decoration:none;">Kl. ${time} / ${cls.classNo ? 'Klasse ' + cls.classNo + ' - ' : ''}${cls.className}</a></div>`;
+          html += `<div class="class-time"><a href="${equipeUrl}" target="_blank">Kl. ${time} / ${cls.classNo ? 'Klasse ' + cls.classNo + ' - ' : ''}${cls.className}</a>${arenaLabel ? `<span class="arena-badge">${arenaLabel}</span>` : ''}</div>`;
           for (const r of cls.riders) {
-            html += `<div class="rider-entry">Nr. ${r.startNo || '?'} - ${r.riderName} / ${r.horseName}</div>`;
+            const rTime = r.startAt ? ` kl. ${r.startAt.match(/(\d{2}):(\d{2})/)?.[0].replace(':','.')}` : '';
+            html += `<div class="rider-entry"><span>Nr. ${r.startNo || '?'}${rTime} - ${r.riderName} / ${r.horseName}</span></div>`;
           }
           html += `</div>`;
         }
-        html += `</div>`; // close day-content
+        html += `</div>`;
       }
-
       content.innerHTML = html;
-    }
-
-    function renderSelectedRiders(riders, riderIdSet) {
-      const container = document.getElementById('selected-riders-list');
-      if (!container) return;
-      if (riderIdSet.size === 0) {
-        container.innerHTML = '<p style="color:#86868b; font-size:0.85rem;">Ingen ryttere valgt</p>';
-        return;
-      }
-      const selected = riders.filter(r => riderIdSet.has(r.id));
-      container.innerHTML = selected.map(r =>
-        `<span class="selected-rider-chip">${r.name} <span class="remove-rider" onclick="removeRiderFromList(${r.id})">&times;</span></span>`
-      ).join('');
-    }
-
-    async function removeRiderFromList(riderId) {
-      if (!currentListData) return;
-      const newIds = currentListData.riderIds.filter(id => id !== riderId);
-      try {
-        await fetch(`/api/lists/${currentListId}/riders`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ riderIds: newIds })
-        });
-        await viewList(currentListId);
-      } catch (err) {
-        alert('Fejl: ' + err.message);
-      }
-    }
-
-    async function loadAddRiders(showId, existingRiderIds) {
-      const list = document.getElementById('add-rider-list');
-      list.innerHTML = '<li class="loading">Henter ryttere</li>';
-
-      try {
-        const res = await fetch(`/api/shows/${showId}/riders`);
-        const riders = await res.json();
-        list.innerHTML = '';
-        const search = document.getElementById('add-rider-search');
-
-        function renderAdd(filter = '') {
-          list.innerHTML = '';
-          const f = filter.toLowerCase();
-          for (const r of riders) {
-            if (existingRiderIds.has(r.id)) continue;
-            if (f && !r.name.toLowerCase().includes(f) && !(r.club||'').toLowerCase().includes(f)) continue;
-            const li = document.createElement('li');
-            li.innerHTML = `
-              <input type="checkbox" id="ar${r.id}" data-rider-id="${r.id}" onchange="showUpdateBtn()">
-              <label for="ar${r.id}">${r.name} <span class="club">${r.club || ''}</span></label>
-            `;
-            list.appendChild(li);
-          }
-        }
-        renderAdd();
-        search.oninput = () => renderAdd(search.value);
-      } catch (err) {
-        list.innerHTML = '<li>Fejl ved indlæsning</li>';
-      }
-    }
-
-    function showUpdateBtn() {
-      const count = document.querySelectorAll('#add-rider-list input:checked').length;
-      const btn = document.getElementById('update-btn');
-      btn.style.display = count > 0 ? 'block' : 'none';
-      btn.textContent = `Tilføj ${count} rytter${count > 1 ? 'e' : ''} til listen`;
-    }
-
-    async function updateListRiders() {
-      const newIds = [...document.querySelectorAll('#add-rider-list input:checked')].map(cb => Number(cb.dataset.riderId));
-      if (newIds.length === 0) return;
-      
-      // Merge without duplicates
-      const existingIds = new Set(currentListData.riderIds);
-      for (const id of newIds) existingIds.add(id);
-      const allIds = [...existingIds];
-
-      const btn = document.getElementById('update-btn');
-      btn.disabled = true;
-      btn.textContent = 'Opdaterer...';
-
-      try {
-        await fetch(`/api/lists/${currentListId}/riders`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ riderIds: allIds })
-        });
-        await viewList(currentListId);
-      } catch (err) {
-        alert('Fejl: ' + err.message);
-        btn.disabled = false;
-        btn.textContent = `Tilføj ${newIds.length} rytter${newIds.length > 1 ? 'e' : ''} til listen`;
-      }
     }
 
     function toggleDay(dayId) {
@@ -706,234 +1298,146 @@
       toggle.textContent = el.classList.contains('collapsed') ? '▶' : '▼';
     }
 
+    // ===== QUICK ADD =====
+    let quickAddRiders = [];
+    function setupQuickAdd(showId, existingIds, allRiders) {
+      quickAddRiders = allRiders.filter(r => !existingIds.has(r.id));
+      const search = document.getElementById('quick-add-search');
+      const results = document.getElementById('quick-add-results');
+      results.innerHTML = ''; search.value = '';
+      search.oninput = () => {
+        const f = search.value.toLowerCase().trim();
+        results.innerHTML = '';
+        if (!f) return;
+        const matches = quickAddRiders.filter(r => r.name.toLowerCase().includes(f) || (r.club || '').toLowerCase().includes(f)).slice(0, 10);
+        for (const r of matches) {
+          const div = document.createElement('div');
+          div.className = 'quick-add-item';
+          div.innerHTML = `<span>${escAttr(r.name)} <span style="color:var(--text3); font-size:0.8rem;">${escAttr(r.club || '')}</span></span>
+            <button class="btn-secondary" onclick="quickAddRider(${r.id})">+ Tilføj</button>`;
+          results.appendChild(div);
+        }
+        if (!matches.length) results.innerHTML = '<div style="color:var(--text3); font-size:0.85rem; padding:8px 0;">Ingen ryttere fundet</div>';
+      };
+    }
+
+    async function quickAddRider(riderId) {
+      if (!currentListData) return;
+      // Check free plan limit
+      const riderCount = (currentListData.riderIds || []).length;
+      if (currentUser && currentUser.plan !== 'pro' && riderCount >= 3) {
+        document.getElementById('limit-modal').style.display = 'flex';
+        return;
+      }
+      const newIds = [...(currentListData.riderIds || []), riderId];
+      const newSelections = currentListData.selections ? { ...currentListData.selections } : {};
+      newSelections[String(riderId)] = 'all';
+      try {
+        await fetch(`/api/lists/${currentListId}/riders`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ riderIds: newIds, selections: newSelections })
+        });
+        const r = quickAddRiders.find(r => r.id === riderId);
+        showToast(`✓ ${r ? r.name : 'Rytter'} tilføjet`, 2500);
+        await viewList(currentListId);
+      } catch (err) { alert('Fejl: ' + err.message); }
+    }
+
+    // ===== SELECTED RIDERS =====
+    function renderSelectedRiders(riders, riderIdSet) {
+      const container = document.getElementById('selected-riders-list');
+      if (!container) return;
+      if (!riderIdSet.size) { container.innerHTML = '<p style="color:#86868b; font-size:0.85rem;">Ingen ryttere valgt</p>'; return; }
+      const selections = currentListData.selections;
+      const selected = riders.filter(r => riderIdSet.has(r.id));
+      container.innerHTML = selected.map(r => {
+        const sel = selections ? selections[String(r.id)] : 'all';
+        let detail = '';
+        if (sel && sel !== 'all' && typeof sel === 'object') {
+          detail = ' <span style="color:var(--text3); font-size:0.78rem;">(' + Object.keys(sel).join(', ') + ')</span>';
+        }
+        return `<span class="chip">${r.name}${detail} <span class="chip-remove" onclick="removeRiderFromList(${r.id})">&times;</span></span>`;
+      }).join('');
+    }
+
+    async function removeRiderFromList(riderId) {
+      if (!currentListData) return;
+      const newIds = currentListData.riderIds.filter(id => id !== riderId);
+      const newSelections = currentListData.selections ? { ...currentListData.selections } : null;
+      if (newSelections) delete newSelections[String(riderId)];
+      try {
+        await fetch(`/api/lists/${currentListId}/riders`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ riderIds: newIds, selections: newSelections })
+        });
+        await viewList(currentListId);
+      } catch (err) { alert('Fejl: ' + err.message); }
+    }
+
+    // ===== PRO MODAL =====
+    function showProModal() {
+      document.getElementById('pro-modal').style.display = 'flex';
+    }
+    function closeProModal(e) {
+      if (!e || e.target === document.getElementById('pro-modal') || e.target.closest('.btn-secondary')) {
+        document.getElementById('pro-modal').style.display = 'none';
+      }
+    }
+    function activatePro() {
+      document.getElementById('pro-modal').style.display = 'none';
+      showToast('Vi giver dig besked når PRO er tilgængeligt 🐴', 3500);
+    }
+
+    function closeLimitModal(e) {
+      if (!e || e.target === document.getElementById('limit-modal') || e.target.closest('.btn-secondary')) {
+        document.getElementById('limit-modal').style.display = 'none';
+      }
+    }
+
+    // ===== REFRESH =====
     async function refreshList() {
       if (!currentListId) return;
       const btn = document.getElementById('refresh-btn');
-      btn.textContent = '⏳ Opdaterer...';
-      btn.disabled = true;
+      btn.textContent = '⏳ Opdaterer...'; btn.disabled = true;
       await viewList(currentListId);
-      btn.textContent = '🔄 Opdater';
-      btn.disabled = false;
-    }
-
-    function showPage(page) {
-      document.getElementById('page-create').style.display = page === 'create' ? 'block' : 'none';
-      document.getElementById('page-view').style.display = page === 'view' ? 'block' : 'none';
-      if (page === 'create') {
-        history.replaceState(null, '', location.pathname);
-        
-        // Ensure shows are loaded if the list is empty
-        if (currentShows.length === 0) {
-          loadShows();
-        }
-
-        // Reset create button
-        const btn = document.getElementById('create-btn');
-        if (btn) {
-          btn.disabled = selectedRiderIds.size === 0;
-          btn.innerHTML = `Opret filmliste (<span id="selected-count">${selectedRiderIds.size}</span> ryttere)`;
-        }
-        
-        // Hide riders section when going back
-        document.getElementById('riders-section').style.display = 'none';
-        document.getElementById('show-select').value = '';
-        
-        loadSavedLists();
-      }
+      btn.textContent = '🔄 Opdater'; btn.disabled = false;
     }
 
     // ===== PULL TO REFRESH =====
     let ptrStartY = 0, ptrActive = false;
     document.addEventListener('touchstart', e => {
-      const pv = document.getElementById('page-view');
-      if (pv.style.display === 'none') return;
+      if (currentTab !== 'showplaner') return;
       if (window.scrollY === 0) { ptrStartY = e.touches[0].clientY; ptrActive = true; }
     }, { passive: true });
     document.addEventListener('touchmove', e => {
       if (!ptrActive) return;
-      const dy = e.touches[0].clientY - ptrStartY;
-      if (dy > 60) {
-        document.getElementById('ptr-indicator').classList.add('active');
+      if (e.touches[0].clientY - ptrStartY > 60) {
+        const ind = document.getElementById('ptr-indicator');
+        if (ind) ind.classList.add('active');
       }
     }, { passive: true });
     document.addEventListener('touchend', () => {
       if (!ptrActive) return;
       ptrActive = false;
       const ind = document.getElementById('ptr-indicator');
-      if (ind.classList.contains('active')) {
-        refreshList().then(() => ind.classList.remove('active'));
-      }
+      if (ind && ind.classList.contains('active')) refreshList().then(() => ind.classList.remove('active'));
     });
 
-    // ===== LIVE / PAST CLASS INDICATORS + COUNTDOWN =====
-    let lastScheduleData = null;
-    let countdownInterval = null;
-
-    function parseClassTime(timeStr) {
-      if (!timeStr) return null;
-      const m = timeStr.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}):(\d{2})/);
-      if (m) return new Date(m[1] + 'T' + m[2] + ':' + m[3] + ':00');
-      return null;
+    // ===== TOAST =====
+    function showToast(msg, ms = 2500) {
+      let t = document.getElementById('app-toast');
+      t.textContent = msg; t.className = 'toast-show';
+      clearTimeout(t._hideTimer);
+      t._hideTimer = setTimeout(() => { t.className = ''; }, ms);
     }
 
-    function updateTimeIndicators() {
-      if (!lastScheduleData) return;
-      const now = new Date();
-      const todayStr = now.toISOString().slice(0, 10);
-      const dates = Object.keys(lastScheduleData.schedule).sort();
+    // ===== ADD RIDERS (backward compat) =====
+    let addRiderSelections = {};
+    let addRiders = [];
+    function showUpdateBtn() {}
 
-      // Flatten all classes with parsed times
-      let allClasses = [];
-      for (const date of dates) {
-        const classes = lastScheduleData.schedule[date];
-        for (let i = 0; i < classes.length; i++) {
-          const t = parseClassTime(classes[i].time);
-          const nextT = (i + 1 < classes.length) ? parseClassTime(classes[i + 1].time) : null;
-          allClasses.push({ date, cls: classes[i], time: t, nextTime: nextT, index: i });
-        }
-      }
-
-      // Mark live/past on DOM
-      document.querySelectorAll('.class-entry').forEach(el => el.classList.remove('live', 'past'));
-      document.querySelectorAll('.live-badge').forEach(el => el.remove());
-
-      let liveFound = false;
-      let nextClass = null;
-
-      for (const item of allClasses) {
-        if (!item.time) continue;
-        const entryEls = document.querySelectorAll(`[data-class-id="${item.cls.classSectionId}"]`);
-        const endTime = item.nextTime || new Date(item.time.getTime() + 60 * 60 * 1000); // default 1hr
-
-        if (now >= item.time && now < endTime) {
-          // LIVE
-          entryEls.forEach(el => {
-            el.classList.add('live');
-            const timeEl = el.querySelector('.class-time');
-            if (timeEl && !timeEl.querySelector('.live-badge')) {
-              timeEl.insertAdjacentHTML('beforeend', '<span class="live-badge">LIVE</span>');
-            }
-          });
-          liveFound = true;
-        } else if (now >= endTime) {
-          entryEls.forEach(el => el.classList.add('past'));
-        } else if (!nextClass) {
-          nextClass = item;
-        }
-      }
-
-      // Countdown
-      const box = document.getElementById('countdown-box');
-      if (nextClass && nextClass.time) {
-        const diffMin = Math.round((nextClass.time - now) / 60000);
-        const firstRider = nextClass.cls.riders?.[0];
-        const riderInfo = firstRider ? `${firstRider.riderName} i ` : '';
-        const classLabel = nextClass.cls.classNo ? `Klasse ${nextClass.cls.classNo}` : nextClass.cls.className;
-        const timeLabel = diffMin <= 0 ? 'starter nu' : diffMin < 60 ? `om ${diffMin} min` : `om ${Math.floor(diffMin/60)}t ${diffMin%60}min`;
-        document.getElementById('countdown-main').innerHTML = `${riderInfo}<span class="countdown-time">${classLabel}</span> ${timeLabel}`;
-        box.style.display = 'block';
-      } else {
-        box.style.display = 'none';
-      }
-    }
-
-    // ===== FILM MODE =====
-    let filmModeOn = false;
-
-    function getFilmKey() {
-      return currentListId ? `filmChecked_${currentListId}` : null;
-    }
-    function getFilmChecked() {
-      const key = getFilmKey();
-      if (!key) return {};
-      try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
-    }
-    function setFilmChecked(data) {
-      const key = getFilmKey();
-      if (key) localStorage.setItem(key, JSON.stringify(data));
-    }
-
-    function toggleFilmMode() {
-      filmModeOn = !filmModeOn;
-      const btn = document.getElementById('filmmode-btn');
-      btn.classList.toggle('active', filmModeOn);
-      document.getElementById('list-content').classList.toggle('filmmode-active', filmModeOn);
-      updateFilmCounter();
-    }
-
-    function onFilmCheck(key, checked) {
-      const data = getFilmChecked();
-      if (checked) data[key] = true; else delete data[key];
-      setFilmChecked(data);
-      // Update visual
-      const entry = document.querySelector(`[data-film-key="${key}"]`);
-      if (entry) entry.classList.toggle('filmed', checked);
-      updateFilmCounter();
-    }
-
-    function updateFilmCounter() {
-      const total = document.querySelectorAll('.film-checkbox').length;
-      const checked = Object.keys(getFilmChecked()).length;
-      const counter = document.getElementById('filmmode-counter');
-      if (counter) counter.textContent = filmModeOn ? `${checked}/${total} filmet` : '';
-    }
-
-    // ===== PATCHED renderSchedule =====
-    const _origRenderSchedule = renderSchedule;
-    renderSchedule = function(sched, listData) {
-      lastScheduleData = sched;
-      const content = document.getElementById('list-content');
-      let html = `<h1>${sched.showName}</h1>`;
-      html += `<p style="color:#888; margin-bottom:16px;">${sched.startDate} – ${sched.endDate}</p>`;
-
-      const dates = Object.keys(sched.schedule).sort();
-      if (dates.length === 0) {
-        html += '<p style="color:#888;">Ingen klasser fundet med valgte ryttere.</p>';
-        content.innerHTML = html;
-        return;
-      }
-
-      const filmData = getFilmChecked();
-      let riderCount = 0;
-
-      for (const date of dates) {
-        const dayId = 'day-' + date;
-        html += `<div class="day-header" onclick="toggleDay('${dayId}')"><span>${formatDate(date)}</span><span class="toggle" id="toggle-${dayId}">▼</span></div>`;
-        html += `<div class="day-content" id="${dayId}">`;
-        for (const cls of sched.schedule[date]) {
-          const time = formatTime(cls.time);
-          const csId = cls.classSectionId || '';
-          html += `<div class="class-entry" data-class-id="${csId}">`;
-          const equipeUrl = csId ? `https://online.equipe.com/startlists/${csId}` : '#';
-          html += `<div class="class-time"><a href="${equipeUrl}" target="_blank" style="color:inherit; text-decoration:none;">Kl. ${time} / ${cls.classNo ? 'Klasse ' + cls.classNo + ' - ' : ''}${cls.className}</a></div>`;
-          for (const r of cls.riders) {
-            const filmKey = `${csId}_${r.riderName}_${r.horseName}`;
-            const filmed = filmData[filmKey] ? 'filmed' : '';
-            const checked = filmData[filmKey] ? 'checked' : '';
-            riderCount++;
-            html += `<div class="rider-entry ${filmed}" data-film-key="${filmKey}"><input type="checkbox" class="film-checkbox" ${checked} onchange="onFilmCheck('${filmKey.replace(/'/g,"\\'")}', this.checked)"><span>Nr. ${r.startNo || '?'} - ${r.riderName} / ${r.horseName}</span></div>`;
-          }
-          html += `</div>`;
-        }
-        html += `</div>`;
-      }
-
-      content.innerHTML = html;
-      content.classList.toggle('filmmode-active', filmModeOn);
-
-      // Show filmmode bar
-      document.getElementById('filmmode-bar').style.display = 'flex';
-      updateFilmCounter();
-
-      // Time indicators
-      updateTimeIndicators();
-      clearInterval(countdownInterval);
-      countdownInterval = setInterval(updateTimeIndicators, 60000);
-    };
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js');
-    }
+    // ===== SERVICE WORKER =====
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 
     init();
   </script>

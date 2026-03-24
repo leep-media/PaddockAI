@@ -1,8 +1,22 @@
 {
-  "appId": "dk.leepmedia.rytterliste",
-  "appName": "Stævne Rytterliste",
+  "appId": "ai.paddock.app",
+  "appName": "PaddockAI",
   "webDir": "public",
   "server": {
     "androidScheme": "https"
+  },
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "StatusBar": {
+      "style": "dark",
+      "backgroundColor": "#0c0c0e"
+    },
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0c0c0e",
+      "showSpinner": false
+    }
   }
 }

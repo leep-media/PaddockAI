@@ -708,8 +708,8 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       const ss = document.getElementById('show-search');
-      ss.addEventListener('focus', () => renderShowDropdown(ss.value));
-      ss.addEventListener('input', () => renderShowDropdown(ss.value));
+      ss.addEventListener('focus', () => { renderShowDropdown(ss.value); document.getElementById('show-dropdown').style.display = 'block'; });
+      ss.addEventListener('input', () => { renderShowDropdown(ss.value); document.getElementById('show-dropdown').style.display = 'block'; });
       ss.addEventListener('blur', () => setTimeout(() => { document.getElementById('show-dropdown').style.display = 'none'; }, 200));
     });
 

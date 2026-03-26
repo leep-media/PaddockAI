@@ -5,6 +5,24 @@ const path = require('path');
 const crypto = require('crypto');
 const { execFile } = require('child_process');
 
+// ===== Convex HTTP Client (optional — falls back to JSON files) =====
+let ConvexHttpClient, api;
+try {
+  ConvexHttpClient = require("convex/browser").ConvexHttpClient;
+  api = require("./convex/_generated/api").api;
+} catch {
+  // Convex not generated yet — JSON fallback only
+  ConvexHttpClient = null;
+  api = null;
+}
+const CONVEX_URL = process.env.CONVEX_URL || '';
+let convex = null;
+function getConvex() {
+  if (!ConvexHttpClient || !api) return null;
+  if (!convex && CONVEX_URL) convex = new ConvexHttpClient(CONVEX_URL);
+  return convex;
+}
+
 function execFileAsync(cmd, args, opts = {}) {
   return new Promise((resolve, reject) => {
     execFile(cmd, args, { timeout: 20000, maxBuffer: 5 * 1024 * 1024, ...opts }, (err, stdout, stderr) => {
@@ -44,14 +62,21 @@ function saveUsers(users) {
 }
 
 // POST /api/users — create or find user
-app.post('/api/users', (req, res) => {
+app.post('/api/users', async (req, res) => {
   try {
     const { name, email } = req.body;
     if (!name || !email) return res.status(400).json({ error: 'Navn og email er påkrævet' });
+
+    // Convex path
+    if (getConvex()) {
+      const user = await getConvex().mutation(api.users.upsert, { name, email });
+      return res.json(user);
+    }
+
+    // JSON fallback
     const users = loadUsers();
     const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (existing) {
-      // Update name if changed
       if (existing.name !== name) { existing.name = name; saveUsers(users); }
       return res.json(existing);
     }
@@ -71,8 +96,16 @@ app.post('/api/users', (req, res) => {
 });
 
 // GET /api/users/:email — get user by email
-app.get('/api/users/:email', (req, res) => {
+app.get('/api/users/:email', async (req, res) => {
   try {
+    // Convex path
+    if (getConvex()) {
+      const user = await getConvex().query(api.users.getByEmail, { email: req.params.email });
+      if (!user) return res.status(404).json({ error: 'Bruger ikke fundet' });
+      return res.json(user);
+    }
+
+    // JSON fallback
     const users = loadUsers();
     const user = users.find(u => u.email.toLowerCase() === req.params.email.toLowerCase());
     if (!user) return res.status(404).json({ error: 'Bruger ikke fundet' });
@@ -83,8 +116,18 @@ app.get('/api/users/:email', (req, res) => {
 });
 
 // PATCH /api/users/:email — update user (plan, name)
-app.patch('/api/users/:email', (req, res) => {
+app.patch('/api/users/:email', async (req, res) => {
   try {
+    // Convex path
+    if (getConvex()) {
+      const user = await getConvex().mutation(api.users.updatePlan, {
+        email: req.params.email,
+        plan: req.body.plan || 'free'
+      });
+      return res.json(user);
+    }
+
+    // JSON fallback
     const users = loadUsers();
     const user = users.find(u => u.email.toLowerCase() === req.params.email.toLowerCase());
     if (!user) return res.status(404).json({ error: 'Bruger ikke fundet' });
@@ -340,9 +383,23 @@ function shouldIncludeStart(start, selections, classSectionId) {
 }
 
 // POST /api/lists - Create film list
-app.post('/api/lists', (req, res) => {
+app.post('/api/lists', async (req, res) => {
   try {
     const { showId, showName, startDate, endDate, riderIds, selections, listName } = req.body;
+
+    // Convex path
+    if (getConvex()) {
+      const list = await getConvex().mutation(api.lists.create, {
+        showId, showName,
+        listName: listName || showName,
+        startDate, endDate,
+        riderIds: riderIds || [],
+        selections: selections || undefined,
+      });
+      return res.json(list);
+    }
+
+    // JSON fallback
     const id = crypto.randomUUID();
     const list = {
       id,
@@ -364,13 +421,27 @@ app.post('/api/lists', (req, res) => {
 });
 
 // GET /api/lists - All saved lists
-app.get('/api/lists', (req, res) => {
+app.get('/api/lists', async (req, res) => {
   try {
+    // Convex path
+    if (getConvex()) {
+      const lists = await getConvex().query(api.lists.getAll, {});
+      return res.json(lists.map(l => ({
+        id: l._id,
+        listName: l.listName || l.showName,
+        showName: l.showName,
+        startDate: l.startDate,
+        endDate: l.endDate,
+        riderCount: (l.riderIds || []).length,
+        createdAt: l.createdAt
+      })));
+    }
+
+    // JSON fallback
     const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'));
     const lists = files.map(f => {
       try { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), 'utf8')); } catch { return null; }
     })
-    // Kun rigtige lister: skal have id + showId (ikke users.json eller backups)
     .filter(l => l && l.id && l.showId && typeof l.showId === 'string')
     .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     res.json(lists.map(l => ({ id: l.id, listName: l.listName || l.showName, showName: l.showName, startDate: l.startDate, endDate: l.endDate, riderCount: (l.riderIds || []).length, createdAt: l.createdAt })));
@@ -380,8 +451,18 @@ app.get('/api/lists', (req, res) => {
 });
 
 // PATCH /api/lists/:id - Rename list
-app.patch('/api/lists/:id', (req, res) => {
+app.patch('/api/lists/:id', async (req, res) => {
   try {
+    // Convex path
+    if (getConvex()) {
+      const list = await getConvex().mutation(api.lists.rename, {
+        id: req.params.id,
+        listName: req.body.listName || ''
+      });
+      return res.json(list);
+    }
+
+    // JSON fallback
     const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
     if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'List not found' });
     const list = JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -394,8 +475,15 @@ app.patch('/api/lists/:id', (req, res) => {
 });
 
 // DELETE /api/lists/:id - Delete list
-app.delete('/api/lists/:id', (req, res) => {
+app.delete('/api/lists/:id', async (req, res) => {
   try {
+    // Convex path
+    if (getConvex()) {
+      await getConvex().mutation(api.lists.remove, { id: req.params.id });
+      return res.json({ ok: true });
+    }
+
+    // JSON fallback
     const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
     if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'List not found' });
     fs.unlinkSync(filePath);
@@ -406,8 +494,16 @@ app.delete('/api/lists/:id', (req, res) => {
 });
 
 // GET /api/lists/:id - Get film list
-app.get('/api/lists/:id', (req, res) => {
+app.get('/api/lists/:id', async (req, res) => {
   try {
+    // Convex path
+    if (getConvex()) {
+      const list = await getConvex().query(api.lists.getById, { id: req.params.id });
+      if (!list) return res.status(404).json({ error: 'List not found' });
+      return res.json({ ...list, id: list._id });
+    }
+
+    // JSON fallback
     const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
     if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'List not found' });
     const list = JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -418,15 +514,29 @@ app.get('/api/lists/:id', (req, res) => {
 });
 
 // PUT /api/lists/:id/riders - Update riders in list
-app.put('/api/lists/:id/riders', (req, res) => {
+app.put('/api/lists/:id/riders', async (req, res) => {
   try {
+    const riderIds = req.body.riderIds || [];
+    const selections = req.body.selections;
+
+    // Convex path
+    if (getConvex()) {
+      const list = await getConvex().mutation(api.lists.updateRiders, {
+        id: req.params.id,
+        riderIds,
+        selections: selections !== undefined ? selections : undefined,
+      });
+      notifyListClients(req.params.id, 'riders-updated', { riderIds: list.riderIds, selections: list.selections });
+      return res.json({ ...list, id: list._id });
+    }
+
+    // JSON fallback
     const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
     if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'List not found' });
     const list = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    list.riderIds = req.body.riderIds || [];
-    if (req.body.selections !== undefined) list.selections = req.body.selections;
+    list.riderIds = riderIds;
+    if (selections !== undefined) list.selections = selections;
     fs.writeFileSync(filePath, JSON.stringify(list, null, 2));
-    // Notify all SSE clients watching this list
     notifyListClients(req.params.id, 'riders-updated', { riderIds: list.riderIds, selections: list.selections });
     res.json(list);
   } catch (err) {
@@ -435,13 +545,27 @@ app.put('/api/lists/:id/riders', (req, res) => {
 });
 
 // POST /api/lists/:id/share - Generate share token
-app.post('/api/lists/:id/share', (req, res) => {
+app.post('/api/lists/:id/share', async (req, res) => {
   try {
+    // Convex path
+    if (getConvex()) {
+      // Check if list already has a share token
+      const existing = await getConvex().query(api.lists.getById, { id: req.params.id });
+      if (!existing) return res.status(404).json({ error: 'List not found' });
+      if (existing.shareToken) {
+        return res.json({ shareToken: existing.shareToken, listId: existing._id });
+      }
+      const token = crypto.randomBytes(6).toString('base64url');
+      const list = await getConvex().mutation(api.lists.addShareToken, { id: req.params.id, token });
+      return res.json({ shareToken: list.shareToken, listId: list._id });
+    }
+
+    // JSON fallback
     const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
     if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'List not found' });
     const list = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     if (!list.shareToken) {
-      list.shareToken = crypto.randomBytes(6).toString('base64url'); // short, URL-safe
+      list.shareToken = crypto.randomBytes(6).toString('base64url');
     }
     fs.writeFileSync(filePath, JSON.stringify(list, null, 2));
     res.json({ shareToken: list.shareToken, listId: list.id });
@@ -451,8 +575,16 @@ app.post('/api/lists/:id/share', (req, res) => {
 });
 
 // GET /api/shared/:token - Resolve share token to list
-app.get('/api/shared/:token', (req, res) => {
+app.get('/api/shared/:token', async (req, res) => {
   try {
+    // Convex path
+    if (getConvex()) {
+      const list = await getConvex().query(api.lists.getByShareToken, { token: req.params.token });
+      if (!list) return res.status(404).json({ error: 'Delt liste ikke fundet' });
+      return res.json({ listId: list._id });
+    }
+
+    // JSON fallback
     const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'));
     for (const f of files) {
       try {
@@ -493,9 +625,16 @@ function addSecondsToClassTime(classStartAt, seconds) {
 // Uses pre-fetched rider data (cached) instead of fetching each class section individually
 app.get('/api/lists/:id/schedule', async (req, res) => {
   try {
-    const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
-    if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'List not found' });
-    const list = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    let list;
+    if (getConvex()) {
+      list = await getConvex().query(api.lists.getById, { id: req.params.id });
+      if (!list) return res.status(404).json({ error: 'List not found' });
+      list.id = list._id; // normalize
+    } else {
+      const filePath = path.join(DATA_DIR, `${req.params.id}.json`);
+      if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'List not found' });
+      list = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    }
     const selections = list.selections || null;
     const riderIdSet = selections ? new Set(Object.keys(selections).map(Number)) : new Set((list.riderIds || []).map(Number));
 

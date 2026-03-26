@@ -369,7 +369,10 @@ app.get('/api/lists', (req, res) => {
     const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'));
     const lists = files.map(f => {
       try { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), 'utf8')); } catch { return null; }
-    }).filter(Boolean).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    })
+    // Kun rigtige lister: skal have id + showId (ikke users.json eller backups)
+    .filter(l => l && l.id && l.showId && typeof l.showId === 'string')
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     res.json(lists.map(l => ({ id: l.id, listName: l.listName || l.showName, showName: l.showName, startDate: l.startDate, endDate: l.endDate, riderCount: (l.riderIds || []).length, createdAt: l.createdAt })));
   } catch (err) {
     res.status(500).json({ error: err.message });

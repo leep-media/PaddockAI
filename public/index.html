@@ -1106,8 +1106,11 @@
         buildTimeline(sched);
         renderFullSchedule(sched);
 
-        const selections = currentListData.selections;
-        const riderIdSet = selections ? new Set(Object.keys(selections).map(Number)) : new Set(currentListData.riderIds);
+        const selections = currentListData?.selections;
+        const riderIds = currentListData?.riderIds || [];
+        const riderIdSet = selections
+          ? new Set(Object.keys(selections).map(Number))
+          : new Set(riderIds.map(Number));
         const ridersRes = await fetch(`/api/shows/${currentListData.showId}/riders`);
         const allRiders = await ridersRes.json();
         renderSelectedRiders(allRiders, riderIdSet);
@@ -1120,6 +1123,11 @@
     // ===== TIMELINE =====
     function buildTimeline(sched) {
       const entries = [];
+      if (!sched || !sched.schedule) {
+        allTimelineEntries = [];
+        renderTimeline();
+        return;
+      }
       for (const [date, classes] of Object.entries(sched.schedule)) {
         for (const cls of classes) {
           for (const r of cls.riders) {

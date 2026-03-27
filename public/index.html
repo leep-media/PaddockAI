@@ -11,6 +11,16 @@
   <meta name="apple-mobile-web-app-title" content="PaddockAI">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <link rel="stylesheet" href="/style.css">
+  <style>
+    .social-login { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .btn-social { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+    .btn-social:hover { background: var(--surface2); }
+    .btn-apple { }
+    .btn-google { }
+    .btn-facebook { color: #1877f2; border-color: #1877f2; }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 4px 0 16px; color: var(--text3); font-size: 0.85rem; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  </style>
 </head>
 <body>
 
@@ -43,11 +53,33 @@
       <div class="auth-back" onclick="showScreen('onboarding')">← Tilbage</div>
       <h2 class="auth-title">Opret din konto</h2>
       <p class="auth-subtitle">Kom i gang med PaddockAI</p>
+      
+      <!-- Social login sektion -->
+      <div class="social-login">
+        <button class="btn-social btn-apple" onclick="loginWithApple()">
+          <svg width="20" height="20" viewBox="0 0 17 20" fill="currentColor"><path d="M15.011 11.235c-.015-2.613 2.15-3.868 2.246-3.926-1.218-1.782-3.116-2.025-3.793-2.053-1.616-.164-3.153.953-3.972.953-.818 0-2.086-.933-3.447-.905-1.789.027-3.438 1.04-4.358 2.639-1.855 3.22-.475 7.978 1.328 10.584.882 1.275 1.93 2.709 3.308 2.659 1.325-.053 1.828-.857 3.429-.857 1.6 0 2.053.857 3.454.83 1.425-.026 2.336-1.288 3.214-2.57.868-1.265 1.258-2.486 1.283-2.553-.027-.013-2.47-.946-2.495-3.801zm-2.617-7.792c.725-.878 1.214-2.098 1.08-3.315-1.046.042-2.31.696-3.059 1.574-.672.776-1.26 2.024-1.101 3.21.161.013.298.02.435.02.898 0 2.025-.515 2.645-1.489z"/></svg>
+          Fortsæt med Apple
+        </button>
+        <button class="btn-social btn-google" onclick="loginWithGoogle()">
+          <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><path d="M44.5 20H24V29H35.8C34.7 33.9 30.1 37 24 37C16.8 37 11 31.2 11 24C11 16.8 16.8 11 24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C11.8 2 2 11.8 2 24C2 36.2 11.8 46 24 46C36.2 46 46 36.2 46 24C46 22.6 45.8 21.3 44.5 20Z" fill="#4285F4"/><path d="M11 24C11 22.1 11.4 20.3 12.2 18.7L5.8 13.7C4 16.8 3 20.3 3 24C3 27.7 4 31.2 5.8 34.3L12.2 29.3C11.4 27.7 11 25.9 11 24Z" fill="#FBBC05"/><path d="M24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C17.7 2 12.2 4.6 8.3 8.7L14.7 13.7C17 12 20.3 11 24 11Z" fill="#EA4335"/><path d="M24 37C20.3 37 17 36 14.7 34.3L8.3 39.3C12.2 43.4 17.7 46 24 46C30 46 35 43.7 38.8 40.1L32.4 33.7C30.2 35.8 27.3 37 24 37Z" fill="#34A853"/></svg>
+          Fortsæt med Google  
+        </button>
+        <button class="btn-social btn-facebook" onclick="loginWithFacebook()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          Fortsæt med Facebook
+        </button>
+      </div>
+      <div class="divider"><span>eller</span></div>
+
       <form id="register-form" onsubmit="handleRegister(event)">
         <label class="auth-label">Navn *</label>
         <input type="text" id="reg-name" placeholder="Dit fulde navn" required autocomplete="name">
         <label class="auth-label">Email *</label>
         <input type="email" id="reg-email" placeholder="din@email.dk" required autocomplete="email">
+        <label class="auth-label">Password *</label>
+        <input type="password" id="reg-password" placeholder="••••••••" required autocomplete="new-password">
+        <label class="auth-label">Bekræft password *</label>
+        <input type="password" id="reg-password-confirm" placeholder="••••••••" required autocomplete="new-password">
         <label class="auth-label">Profilbillede <span class="auth-optional">(valgfrit)</span></label>
         <div class="avatar-upload-row">
           <div class="avatar-preview" id="reg-avatar-preview">
@@ -69,9 +101,29 @@
       <div class="auth-back" onclick="showScreen('onboarding')">← Tilbage</div>
       <h2 class="auth-title">Log ind</h2>
       <p class="auth-subtitle">Velkommen tilbage 🐴</p>
+      
+      <!-- Social login sektion -->
+      <div class="social-login">
+        <button class="btn-social btn-apple" onclick="loginWithApple()">
+          <svg width="20" height="20" viewBox="0 0 17 20" fill="currentColor"><path d="M15.011 11.235c-.015-2.613 2.15-3.868 2.246-3.926-1.218-1.782-3.116-2.025-3.793-2.053-1.616-.164-3.153.953-3.972.953-.818 0-2.086-.933-3.447-.905-1.789.027-3.438 1.04-4.358 2.639-1.855 3.22-.475 7.978 1.328 10.584.882 1.275 1.93 2.709 3.308 2.659 1.325-.053 1.828-.857 3.429-.857 1.6 0 2.053.857 3.454.83 1.425-.026 2.336-1.288 3.214-2.57.868-1.265 1.258-2.486 1.283-2.553-.027-.013-2.47-.946-2.495-3.801zm-2.617-7.792c.725-.878 1.214-2.098 1.08-3.315-1.046.042-2.31.696-3.059 1.574-.672.776-1.26 2.024-1.101 3.21.161.013.298.02.435.02.898 0 2.025-.515 2.645-1.489z"/></svg>
+          Fortsæt med Apple
+        </button>
+        <button class="btn-social btn-google" onclick="loginWithGoogle()">
+          <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><path d="M44.5 20H24V29H35.8C34.7 33.9 30.1 37 24 37C16.8 37 11 31.2 11 24C11 16.8 16.8 11 24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C11.8 2 2 11.8 2 24C2 36.2 11.8 46 24 46C36.2 46 46 36.2 46 24C46 22.6 45.8 21.3 44.5 20Z" fill="#4285F4"/><path d="M11 24C11 22.1 11.4 20.3 12.2 18.7L5.8 13.7C4 16.8 3 20.3 3 24C3 27.7 4 31.2 5.8 34.3L12.2 29.3C11.4 27.7 11 25.9 11 24Z" fill="#FBBC05"/><path d="M24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C17.7 2 12.2 4.6 8.3 8.7L14.7 13.7C17 12 20.3 11 24 11Z" fill="#EA4335"/><path d="M24 37C20.3 37 17 36 14.7 34.3L8.3 39.3C12.2 43.4 17.7 46 24 46C30 46 35 43.7 38.8 40.1L32.4 33.7C30.2 35.8 27.3 37 24 37Z" fill="#34A853"/></svg>
+          Fortsæt med Google  
+        </button>
+        <button class="btn-social btn-facebook" onclick="loginWithFacebook()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          Fortsæt med Facebook
+        </button>
+      </div>
+      <div class="divider"><span>eller</span></div>
+
       <form id="login-form" onsubmit="handleLogin(event)">
         <label class="auth-label">Email</label>
         <input type="email" id="login-email" placeholder="din@email.dk" required autocomplete="email">
+        <label class="auth-label">Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
         <button type="submit" id="login-submit-btn">Log ind</button>
       </form>
       <p class="auth-switch">Ingen konto? <a href="#" onclick="showScreen('register'); return false;">Opret en her</a></p>
@@ -348,6 +400,33 @@
   <div id="app-toast"></div>
 
   <script>
+    // ===== AUTH HELPERS =====
+    function loginWithGoogle() {
+      const clientId = window.GOOGLE_CLIENT_ID || '';
+      if (!clientId) { showToast('Google login konfigureres snart 🐴'); return; }
+      const redirect = encodeURIComponent(window.location.origin + '/auth/google/callback');
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirect}&response_type=code&scope=email%20profile`;
+    }
+
+    function loginWithApple() {
+      showToast('Apple login konfigureres snart 🐴');
+    }
+
+    function loginWithFacebook() {
+      const appId = window.FACEBOOK_APP_ID || '';
+      if (!appId) { showToast('Facebook login konfigureres snart 🐴'); return; }
+      const redirect = encodeURIComponent(window.location.origin + '/auth/facebook/callback');
+      window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirect}&scope=email,public_profile`;
+    }
+
+    async function hashPassword(password) {
+      const msgUint8 = new TextEncoder().encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+
     // ===== STATE =====
     let currentUser = null;
     let currentShows = [];
@@ -393,16 +472,21 @@
       e.preventDefault();
       const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
-      if (!name || !email) return;
+      const password = document.getElementById('reg-password').value;
+      const confirm = document.getElementById('reg-password-confirm').value;
+
+      if (!name || !email || !password) return;
+      if (password !== confirm) { alert('Password er ikke ens'); return; }
 
       const btn = document.getElementById('reg-submit-btn');
       btn.disabled = true; btn.textContent = 'Opretter konto...';
 
       try {
+        const passwordHash = await hashPassword(password);
         const res = await fetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email })
+          body: JSON.stringify({ name, email, passwordHash })
         });
         const user = await res.json();
         if (user.error) throw new Error(user.error);
@@ -423,15 +507,23 @@
     async function handleLogin(e) {
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
-      if (!email) return;
+      const password = document.getElementById('login-password').value;
+      if (!email || !password) return;
 
       const btn = document.getElementById('login-submit-btn');
       btn.disabled = true; btn.textContent = 'Logger ind...';
 
       try {
-        const res = await fetch('/api/users/' + encodeURIComponent(email));
+        const passwordHash = await hashPassword(password);
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, passwordHash, login: true })
+        });
+        
         if (!res.ok) {
-          alert('Ingen konto fundet med denne email. Opret en ny konto.');
+          const err = await res.json();
+          alert('Login fejlede: ' + (err.error || 'Ukendt fejl'));
           btn.disabled = false; btn.textContent = 'Log ind';
           return;
         }

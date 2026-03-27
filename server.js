@@ -64,11 +64,12 @@ function saveUsers(users) {
 // POST /api/users — create or find user
 app.post('/api/users', async (req, res) => {
   try {
-    const { name, email } = req.body;
-    if (!name || !email) return res.status(400).json({ error: 'Navn og email er påkrævet' });
+    const { name, email, passwordHash, login } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email er påkrævet' });
+    if (!login && !name) return res.status(400).json({ error: 'Navn er påkrævet ved oprettelse' });
 
-    // Convex path
-    if (getConvex()) {
+    // Convex path (note: Convex doesn't have passwordHash logic yet, falling back to JSON for this feature)
+    if (getConvex() && !passwordHash) {
       const user = await getConvex().mutation(api.users.upsert, { name, email });
       return res.json(user);
     }
@@ -76,23 +77,53 @@ app.post('/api/users', async (req, res) => {
     // JSON fallback
     const users = loadUsers();
     const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    
     if (existing) {
-      if (existing.name !== name) { existing.name = name; saveUsers(users); }
-      return res.json(existing);
+      // Validate password if user has one
+      if (existing.passwordHash) {
+        if (!passwordHash) return res.status(401).json({ error: 'Password påkrævet' });
+        if (existing.passwordHash !== passwordHash) return res.status(401).json({ error: 'Forkert password' });
+      } else if (passwordHash) {
+        // First time setting password for legacy user
+        existing.passwordHash = passwordHash;
+      }
+      
+      if (name && existing.name !== name) { 
+        existing.name = name; 
+      }
+      saveUsers(users);
+      const { passwordHash: _, ...safeExisting } = existing;
+      return res.json(safeExisting);
     }
+    
+    if (login) return res.status(404).json({ error: 'Bruger ikke fundet' });
+
     const user = {
       id: crypto.randomUUID(),
       name,
       email: email.toLowerCase(),
+      passwordHash: passwordHash || null,
       plan: 'free',
       createdAt: new Date().toISOString()
     };
     users.push(user);
     saveUsers(users);
-    res.json(user);
+    const { passwordHash: __, ...safeUser } = user;
+    res.json(safeUser);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// GET /auth/google/callback
+app.get('/auth/google/callback', async (req, res) => {
+  // Placeholder — returnerer til app med fejlbesked hvis ikke konfigureret
+  res.redirect('/?auth_error=google_not_configured');
+});
+
+// GET /auth/facebook/callback  
+app.get('/auth/facebook/callback', async (req, res) => {
+  res.redirect('/?auth_error=facebook_not_configured');
 });
 
 // GET /api/users/:email — get user by email
@@ -109,7 +140,10 @@ app.get('/api/users/:email', async (req, res) => {
     const users = loadUsers();
     const user = users.find(u => u.email.toLowerCase() === req.params.email.toLowerCase());
     if (!user) return res.status(404).json({ error: 'Bruger ikke fundet' });
-    res.json(user);
+    
+    // Don't send password hash to client
+    const { passwordHash, ...safeUser } = user;
+    res.json(safeUser);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

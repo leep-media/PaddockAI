@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { execFile } = require('child_process');
+const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STRIPE_SECRET_KEY) : null;
 
 // ===== Convex HTTP Client (optional — falls back to JSON files) =====
 let ConvexHttpClient, api;
@@ -35,6 +36,28 @@ function execFileAsync(cmd, args, opts = {}) {
   });
 }
 
+async function upgradeToPro(email, subscriptionId) {
+  // Opdater i Convex hvis tilgængeligt
+  const c = getConvex();
+  if (c) {
+    const { api } = require('./convex/_generated/api');
+    await c.mutation(api.users.updatePlan, { email, plan: 'pro', subscriptionId: subscriptionId || '' });
+  } else {
+    // JSON fallback
+    const users = loadUsers();
+    const u = users.find(u => u.email === email.toLowerCase());
+    if (u) { u.plan = 'pro'; u.subscriptionId = subscriptionId; saveUsers(users); }
+  }
+}
+
+async function downgradeFromPro(subscriptionId) {
+  const c = getConvex();
+  if (c) {
+    const { api } = require('./convex/_generated/api');
+    await c.mutation(api.users.downgradeBySubscription, { subscriptionId });
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 // På Railway: brug /data volume hvis tilgængeligt, ellers lokal data/
@@ -43,6 +66,35 @@ const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH
   : path.join(__dirname, 'data');
 const OPENCLAW_SESSIONS_DIR = path.join(process.env.HOME || '', '.openclaw', 'agents', 'main', 'sessions');
 const EQUIPE_BASE = 'https://online.equipe.com';
+
+// POST /api/stripe-webhook — Stripe webhook
+app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Betaling ikke konfigureret' });
+  const sig = req.headers['stripe-signature'];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET || '');
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+  
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const email = session.metadata?.email || session.customer_email;
+    if (email) {
+      // Opdater bruger til PRO i Convex eller JSON
+      await upgradeToPro(email, session.subscription);
+    }
+  }
+  
+  if (event.type === 'customer.subscription.deleted') {
+    const sub = event.data.object;
+    // Downgrade bruger — find via subscription ID
+    await downgradeFromPro(sub.id);
+  }
+  
+  res.json({ received: true });
+});
 
 app.use(express.json());
 
@@ -172,6 +224,137 @@ app.patch('/api/users/:email', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// POST /api/checkout — opret Stripe checkout session
+app.post('/api/checkout', async (req, res) => {
+  try {
+    if (!stripe) {
+      return res.status(503).json({ error: 'Betaling ikke konfigureret endnu' });
+    }
+    const { email } = req.body;
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'subscription',
+      customer_email: email,
+      line_items: [{
+        price_data: {
+          currency: 'dkk',
+          product_data: { name: 'PaddockAI PRO', description: 'Ubegrænsede hold, push-notifikationer og meget mere' },
+          recurring: { interval: 'month' },
+          unit_amount: 4900, // 49 kr
+        },
+        quantity: 1,
+      }],
+      success_url: `${process.env.APP_URL || 'https://web-production-83b1b3.up.railway.app'}/?pro_success=1`,
+      cancel_url: `${process.env.APP_URL || 'https://web-production-83b1b3.up.railway.app'}/?pro_cancel=1`,
+      metadata: { email },
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Middleware til admin routes
+function requireAdmin(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth) {
+    res.set('WWW-Authenticate', 'Basic realm="PaddockAI Admin"');
+    return res.status(401).send('Authentication required');
+  }
+  const [type, creds] = auth.split(' ');
+  const [user, pass] = Buffer.from(creds, 'base64').toString().split(':');
+  const adminPass = process.env.ADMIN_PASSWORD || 'paddockai2026';
+  if (user !== 'admin' || pass !== adminPass) {
+    return res.status(403).send('Forbidden');
+  }
+  next();
+}
+
+// GET /admin — admin panel
+app.get('/admin', requireAdmin, async (req, res) => {
+  // Hent alle brugere
+  let users = [];
+  const c = getConvex();
+  if (c) {
+    const { api } = require('./convex/_generated/api');
+    users = await c.query(api.users.getAll);
+  } else {
+    users = loadUsers();
+  }
+  
+  const html = `<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<title>PaddockAI Admin</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background: #0c0c0e; color: #f5f5f7; padding: 24px; max-width: 900px; margin: 0 auto; }
+  h1 { color: #c9a96e; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #2c2c2e; }
+  th { color: #86868b; font-size: 0.8rem; text-transform: uppercase; }
+  .badge-pro { background: linear-gradient(135deg, #c9a96e, #a0783c); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+  .badge-free { background: #2c2c2e; color: #86868b; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+  .btn { padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.85rem; }
+  .btn-upgrade { background: #c9a96e; color: #000; }
+  .btn-downgrade { background: #3a3a3c; color: #f5f5f7; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat { background: #1c1c1e; padding: 16px; border-radius: 12px; }
+  .stat-num { font-size: 2rem; font-weight: 700; color: #c9a96e; }
+  .stat-label { color: #86868b; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<h1>🐴 PaddockAI Admin</h1>
+<div class="stats">
+  <div class="stat"><div class="stat-num">${users.length}</div><div class="stat-label">Brugere i alt</div></div>
+  <div class="stat"><div class="stat-num">${users.filter(u => u.plan === 'pro').length}</div><div class="stat-label">PRO brugere</div></div>
+  <div class="stat"><div class="stat-num">${users.filter(u => u.plan === 'free').length}</div><div class="stat-label">Gratis brugere</div></div>
+</div>
+<table>
+  <tr><th>Navn</th><th>Email</th><th>Plan</th><th>Oprettet</th><th>Handling</th></tr>
+  ${users.map(u => `
+  <tr>
+    <td>${u.name}</td>
+    <td>${u.email}</td>
+    <td><span class="badge-${u.plan}">${u.plan.toUpperCase()}</span></td>
+    <td>${new Date(u.createdAt).toLocaleDateString('da-DK')}</td>
+    <td>
+      ${u.plan === 'free' 
+        ? `<form method="POST" action="/admin/upgrade" style="display:inline"><input type="hidden" name="email" value="${u.email}"><button class="btn btn-upgrade">→ PRO gratis</button></form>`
+        : `<form method="POST" action="/admin/downgrade" style="display:inline"><input type="hidden" name="email" value="${u.email}"><button class="btn btn-downgrade">→ Gratis</button></form>`
+      }
+    </td>
+  </tr>`).join('')}
+</table>
+</body>
+</html>`;
+  res.send(html);
+});
+
+// POST /admin/upgrade — giv gratis PRO
+app.post('/admin/upgrade', requireAdmin, express.urlencoded({ extended: false }), async (req, res) => {
+  const { email } = req.body;
+  await upgradeToPro(email, 'manual');
+  res.redirect('/admin');
+});
+
+// POST /admin/downgrade — fjern PRO
+app.post('/admin/downgrade', requireAdmin, express.urlencoded({ extended: false }), async (req, res) => {
+  const { email } = req.body;
+  const c = getConvex();
+  if (c) {
+    const { api } = require('./convex/_generated/api');
+    await c.mutation(api.users.updatePlan, { email, plan: 'free', subscriptionId: '' });
+  } else {
+    const users = loadUsers();
+    const u = users.find(u => u.email === email.toLowerCase());
+    if (u) { u.plan = 'free'; delete u.subscriptionId; saveUsers(users); }
+  }
+  res.redirect('/admin');
 });
 
 // ===== SSE: live sync for shared lists =====

@@ -6,6 +6,7 @@ export default defineSchema({
     name: v.string(),
     email: v.string(),
     plan: v.string(), // "free" | "pro"
+    subscriptionId: v.optional(v.string()),
     createdAt: v.string(),
   }).index("by_email", ["email"]),
 

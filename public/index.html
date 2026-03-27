@@ -365,7 +365,7 @@
           <div class="pmf-item">✓ Del lister med ryttere</div>
           <div class="pmf-item">✓ Eksportér startlister til PDF</div>
         </div>
-        <button class="pro-activate-btn" onclick="activatePro()">Aktiver PRO (kommer snart)</button>
+        <button class="pro-activate-btn" onclick="upgradeToPro()">Aktiver PRO</button>
         <button class="btn-secondary" onclick="closeProModal()" style="margin-top:8px;">Fortsæt gratis</button>
       </div>
     </div>
@@ -1483,9 +1483,28 @@
         document.getElementById('pro-modal').style.display = 'none';
       }
     }
-    function activatePro() {
-      document.getElementById('pro-modal').style.display = 'none';
-      showToast('Vi giver dig besked når PRO er tilgængeligt 🐴', 3500);
+    function getCurrentUser() { return currentUser; }
+
+    async function upgradeToPro() {
+      const user = getCurrentUser();
+      if (!user) { showToast('Log ind for at opgradere'); return; }
+      
+      try {
+        showToast('Åbner betalingsside...');
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: user.email })
+        });
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          showToast(data.error || 'Fejl ved oprettelse af betaling');
+        }
+      } catch (err) {
+        showToast('Fejl: ' + err.message);
+      }
     }
 
     function closeLimitModal(e) {
@@ -1538,6 +1557,19 @@
 
     // ===== SERVICE WORKER =====
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+
+    // Vis success/cancel besked fra Stripe
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('pro_success')) {
+        showToast('🎉 Velkommen til PRO! Din konto er nu opgraderet.');
+        window.history.replaceState({}, '', '/');
+      }
+      if (params.get('pro_cancel')) {
+        showToast('Betaling annulleret.');
+        window.history.replaceState({}, '', '/');
+      }
+    });
 
     init();
   </script>

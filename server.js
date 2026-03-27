@@ -284,6 +284,7 @@ app.get('/admin', requireAdmin, async (req, res) => {
     users = loadUsers();
   }
   
+  const roadmap = loadRoadmap();
   const html = `<!DOCTYPE html>
 <html lang="da">
 <head>
@@ -291,29 +292,51 @@ app.get('/admin', requireAdmin, async (req, res) => {
 <meta name="viewport" content="width=device-width">
 <title>PaddockAI Admin</title>
 <style>
-  body { font-family: -apple-system, sans-serif; background: #0c0c0e; color: #f5f5f7; padding: 24px; max-width: 900px; margin: 0 auto; }
-  h1 { color: #c9a96e; }
-  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #2c2c2e; }
-  th { color: #86868b; font-size: 0.8rem; text-transform: uppercase; }
+  body { font-family: -apple-system, sans-serif; background: #0c0c0e; color: #f5f5f7; padding: 24px; max-width: 960px; margin: 0 auto; }
+  h1 { color: #c9a96e; margin-bottom: 4px; }
+  h2 { color: #c9a96e; margin: 40px 0 16px; font-size: 1.2rem; }
+  nav { display: flex; gap: 16px; margin-bottom: 32px; border-bottom: 1px solid #2c2c2e; padding-bottom: 12px; }
+  nav a { color: #86868b; text-decoration: none; font-size: 0.9rem; }
+  nav a:hover { color: #f5f5f7; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #2c2c2e; font-size: 0.9rem; }
+  th { color: #86868b; font-size: 0.75rem; text-transform: uppercase; }
   .badge-pro { background: linear-gradient(135deg, #c9a96e, #a0783c); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
   .badge-free { background: #2c2c2e; color: #86868b; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
-  .btn { padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.85rem; }
+  .btn { padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.82rem; font-weight: 500; }
   .btn-upgrade { background: #c9a96e; color: #000; }
-  .btn-downgrade { background: #3a3a3c; color: #f5f5f7; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-  .stat { background: #1c1c1e; padding: 16px; border-radius: 12px; }
+  .btn-downgrade { background: #3a3a3c; color: #86868b; }
+  .btn-delete { background: #3a1a1a; color: #ff453a; }
+  .btn-add { background: #c9a96e; color: #000; padding: 10px 20px; font-size: 0.9rem; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat { background: #1c1c1e; padding: 16px 20px; border-radius: 12px; }
   .stat-num { font-size: 2rem; font-weight: 700; color: #c9a96e; }
-  .stat-label { color: #86868b; font-size: 0.85rem; }
+  .stat-label { color: #86868b; font-size: 0.82rem; margin-top: 2px; }
+  .roadmap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+  .roadmap-card { background: #1c1c1e; border-radius: 12px; padding: 16px 18px; position: relative; }
+  .roadmap-card h3 { margin: 0 0 6px; font-size: 0.95rem; color: #f5f5f7; padding-right: 32px; }
+  .roadmap-card p { margin: 0; font-size: 0.82rem; color: #86868b; line-height: 1.5; }
+  .roadmap-card .source { font-size: 0.7rem; color: #48484a; margin-top: 8px; }
+  .roadmap-card form { position: absolute; top: 12px; right: 12px; }
+  .roadmap-card .btn-delete { padding: 4px 8px; font-size: 0.75rem; }
+  .add-form { background: #1c1c1e; border-radius: 12px; padding: 20px; margin-top: 16px; }
+  .add-form input, .add-form textarea { width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 8px; color: #f5f5f7; padding: 10px 12px; font-size: 0.9rem; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
+  .add-form textarea { height: 80px; resize: vertical; }
+  .add-form label { font-size: 0.8rem; color: #86868b; display: block; margin-bottom: 4px; }
 </style>
 </head>
 <body>
 <h1>🐴 PaddockAI Admin</h1>
+<nav>
+  <a href="#users">Brugere</a>
+  <a href="#roadmap">Roadmap</a>
+</nav>
 <div class="stats">
   <div class="stat"><div class="stat-num">${users.length}</div><div class="stat-label">Brugere i alt</div></div>
   <div class="stat"><div class="stat-num">${users.filter(u => u.plan === 'pro').length}</div><div class="stat-label">PRO brugere</div></div>
   <div class="stat"><div class="stat-num">${users.filter(u => u.plan === 'free').length}</div><div class="stat-label">Gratis brugere</div></div>
 </div>
+<h2 id="users">👥 Brugere (${users.length})</h2>
 <table>
   <tr><th>Navn</th><th>Email</th><th>Plan</th><th>Oprettet</th><th>Handling</th></tr>
   ${users.map(u => `
@@ -330,9 +353,82 @@ app.get('/admin', requireAdmin, async (req, res) => {
     </td>
   </tr>`).join('')}
 </table>
+
+  <!-- ROADMAP -->
+  <h2 id="roadmap">📋 Roadmap (${roadmap.length} features)</h2>
+  <div class="roadmap-grid">
+    ${roadmap.map(item => `
+    <div class="roadmap-card">
+      <form method="POST" action="/admin/roadmap/delete">
+        <input type="hidden" name="id" value="${item.id}">
+        <button class="btn btn-delete" title="Fjern">✕</button>
+      </form>
+      <h3>${item.title}</h3>
+      <p>${item.description}</p>
+      <div class="source">Tilføjet: ${new Date(item.createdAt).toLocaleDateString('da-DK')} · ${item.source}</div>
+    </div>`).join('')}
+  </div>
+
+  <div class="add-form">
+    <h3 style="margin: 0 0 16px; font-size: 1rem;">+ Tilføj ny feature</h3>
+    <form method="POST" action="/admin/roadmap/add">
+      <label>Titel</label>
+      <input type="text" name="title" placeholder="f.eks. Notifikationer ved klasseændring" required>
+      <label>Beskrivelse</label>
+      <textarea name="description" placeholder="Beskriv hvad featuren gør og hvorfor den er nyttig..."></textarea>
+      <label>Kilde (valgfrit)</label>
+      <input type="text" name="source" placeholder="f.eks. Dan / bruger-feedback / idé">
+      <button type="submit" class="btn btn-add">Tilføj til roadmap</button>
+    </form>
+  </div>
+
 </body>
 </html>`;
   res.send(html);
+});
+
+// ===== ROADMAP STORAGE =====
+const ROADMAP_FILE = path.join(DATA_DIR, 'roadmap.json');
+
+function loadRoadmap() {
+  try {
+    if (fs.existsSync(ROADMAP_FILE)) return JSON.parse(fs.readFileSync(ROADMAP_FILE, 'utf8'));
+  } catch {}
+  return [
+    { id: '1', title: 'Google & Apple login', description: 'Log ind med din Google- eller Apple-konto i stedet for email + password.', source: 'leepster', createdAt: new Date().toISOString() },
+    { id: '2', title: 'Push-notifikationer', description: 'Få besked på telefonen 20 og 5 minutter før en rytter starter. PRO-feature.', source: 'leepster', createdAt: new Date().toISOString() },
+    { id: '3', title: 'Mine heste', description: 'Opret profiler for dine heste med vaccinationer, skoprogram, sundhedslogbog og billeder.', source: 'leepster', createdAt: new Date().toISOString() },
+    { id: '4', title: 'Kalender & stævneoversigt', description: 'Se alle kommende stævner du er tilmeldt i én samlet kalender med notifikationer.', source: 'leepster', createdAt: new Date().toISOString() },
+    { id: '5', title: 'Del med rytter', description: 'Send din rytter et link med deres personlige startplan — de ser kun deres egne tider.', source: 'leepster', createdAt: new Date().toISOString() },
+    { id: '6', title: 'Eksportér til PDF', description: 'Download startplanen som PDF — perfekt til print eller deling.', source: 'leepster', createdAt: new Date().toISOString() },
+    { id: '7', title: 'Multi-stævne overblik', description: 'Træner flere ryttere på samme dag på forskellige stævner? Se dem alle i ét overblik.', source: 'leepster', createdAt: new Date().toISOString() },
+    { id: '8', title: 'Træningslogbog', description: 'Log træninger, noter og fremskridt for dine ryttere og heste over tid.', source: 'leepster', createdAt: new Date().toISOString() },
+    { id: '9', title: 'Automatisk klasseskema-opdatering', description: 'Appen henter automatisk ændringer i startlisten og notificerer dig hvis din rytters tid ændrer sig.', source: 'leepster', createdAt: new Date().toISOString() },
+    { id: '10', title: 'Stallregnskab', description: 'Hold styr på udgifter og indtægter for stald og heste — foder, dyrlæge, stævner m.m.', source: 'leepster', createdAt: new Date().toISOString() },
+  ];
+}
+
+function saveRoadmap(items) {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.writeFileSync(ROADMAP_FILE, JSON.stringify(items, null, 2));
+}
+
+// POST /admin/roadmap/add
+app.post('/admin/roadmap/add', requireAdmin, express.urlencoded({ extended: true }), (req, res) => {
+  const { title, description, source } = req.body;
+  if (!title) return res.redirect('/admin#roadmap');
+  const items = loadRoadmap();
+  items.push({ id: Date.now().toString(), title, description: description || '', source: source || 'admin', createdAt: new Date().toISOString() });
+  saveRoadmap(items);
+  res.redirect('/admin#roadmap');
+});
+
+// POST /admin/roadmap/delete
+app.post('/admin/roadmap/delete', requireAdmin, express.urlencoded({ extended: false }), (req, res) => {
+  const { id } = req.body;
+  const items = loadRoadmap().filter(i => i.id !== id);
+  saveRoadmap(items);
+  res.redirect('/admin#roadmap');
 });
 
 // POST /admin/upgrade — giv gratis PRO

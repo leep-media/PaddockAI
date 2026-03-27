@@ -941,7 +941,7 @@
       const needsTree = horseNames.length > 1 || horseNames.some(h => horses[h].length > 1);
       const rFull = isRiderFullySelected(r);
       const rPartial = isRiderPartiallySelected(r);
-      const rExpanded = expandedRiders.has(r.id);
+      const rExpanded = expandedRiders.has(r.id) || rPartial;
       const totalEntries = (r.entries || []).length;
       const selectedCount = Object.values(riderSelections[r.id] || {}).reduce((n, s) => n + s.size, 0);
       let metaText = '';

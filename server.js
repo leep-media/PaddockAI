@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { execFile } = require('child_process');
 const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STRIPE_SECRET_KEY) : null;
+const { google } = require('googleapis');
 
 // ===== Convex HTTP Client (optional — falls back to JSON files) =====
 let ConvexHttpClient, api;
@@ -113,6 +114,73 @@ function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
+function buildGoogleOAuthClient() {
+  const clientId = process.env.GOOGLE_CLIENT_ID || '';
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${process.env.APP_URL || `http://localhost:${PORT}`}/auth/google/callback`;
+  if (!clientId || !clientSecret) return null;
+  return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+}
+
+function upsertJsonUserFromProvider(profile, provider) {
+  const users = loadUsers();
+  const email = String(profile.email || '').toLowerCase();
+  if (!email) throw new Error(`${provider} login kræver en email`);
+
+  let user = users.find(u => u.email === email);
+  const name = profile.name || profile.given_name || email.split('@')[0];
+  const avatarData = profile.picture || profile.avatarUrl || null;
+  const providerId = profile.sub || profile.id || '';
+
+  if (user) {
+    user.name = user.name || name;
+    if (provider === 'google') user.googleId = user.googleId || providerId;
+    if (provider === 'facebook') user.facebookId = user.facebookId || providerId;
+    if (provider === 'apple') user.appleId = user.appleId || providerId;
+    user.authProvider = user.authProvider || provider;
+    if (avatarData && !user.avatarData) user.avatarData = avatarData;
+  } else {
+    user = {
+      id: crypto.randomUUID(),
+      name,
+      email,
+      passwordHash: null,
+      authProvider: provider,
+      googleId: provider === 'google' ? providerId : null,
+      facebookId: provider === 'facebook' ? providerId : null,
+      appleId: provider === 'apple' ? providerId : null,
+      avatarData,
+      plan: 'free',
+      createdAt: new Date().toISOString()
+    };
+    users.push(user);
+  }
+
+  saveUsers(users);
+  const { passwordHash, ...safeUser } = user;
+  return safeUser;
+}
+
+async function upsertUserFromProviderProfile(profile, provider) {
+  const email = String(profile.email || '').toLowerCase();
+  if (!email) throw new Error(`${provider} login kræver en email`);
+
+  if (getConvex()) {
+    const user = await getConvex().mutation(api.users.upsert, {
+      name: profile.name || profile.given_name || email.split('@')[0],
+      email,
+      avatarData: profile.picture || profile.avatarUrl || undefined,
+      googleId: provider === 'google' ? (profile.sub || undefined) : undefined,
+      facebookId: provider === 'facebook' ? (profile.id || undefined) : undefined,
+      appleId: provider === 'apple' ? (profile.sub || undefined) : undefined,
+      authProvider: provider
+    });
+    return user;
+  }
+
+  return upsertJsonUserFromProvider(profile, provider);
+}
+
 // POST /api/users — create or find user
 app.post('/api/users', async (req, res) => {
   try {
@@ -167,16 +235,93 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
+// GET /auth/google
+app.get('/auth/google', async (req, res) => {
+  try {
+    const oauth2Client = buildGoogleOAuthClient();
+    if (!oauth2Client) return res.redirect('/?auth_error=google_not_configured');
+
+    const state = Buffer.from(JSON.stringify({ returnTo: '/' })).toString('base64url');
+    const authUrl = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      prompt: 'consent',
+      scope: ['openid', 'email', 'profile'],
+      state,
+    });
+    res.redirect(authUrl);
+  } catch (err) {
+    console.error('Google auth start error:', err.message);
+    res.redirect('/?auth_error=google_start_failed');
+  }
+});
+
 // GET /auth/google/callback
 app.get('/auth/google/callback', async (req, res) => {
-  // Placeholder — returnerer til app med fejlbesked hvis ikke konfigureret
-  res.redirect('/?auth_error=google_not_configured');
+  try {
+    const oauth2Client = buildGoogleOAuthClient();
+    if (!oauth2Client) return res.redirect('/?auth_error=google_not_configured');
+
+    const { code } = req.query;
+    if (!code) return res.redirect('/?auth_error=missing_google_code');
+
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+
+    const oauth2 = google.oauth2({ auth: oauth2Client, version: 'v2' });
+    const { data: profile } = await oauth2.userinfo.get();
+    const user = await upsertUserFromProviderProfile(profile, 'google');
+
+    const payload = Buffer.from(JSON.stringify(user)).toString('base64url');
+    res.redirect(`/?auth_success=google&user=${payload}`);
+  } catch (err) {
+    console.error('Google callback error:', err.message);
+    res.redirect('/?auth_error=google_login_failed');
+  }
+});
+
+// GET /auth/facebook
+app.get('/auth/facebook', (req, res) => {
+  const appId = process.env.FACEBOOK_APP_ID;
+  if (!appId) return res.redirect('/?auth_error=facebook_not_configured');
+  const redirectUri = encodeURIComponent(`${process.env.APP_URL || `http://localhost:${PORT}`}/auth/facebook/callback`);
+  res.redirect(`https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=email,public_profile`);
 });
 
 // GET /auth/facebook/callback  
 app.get('/auth/facebook/callback', async (req, res) => {
-  res.redirect('/?auth_error=facebook_not_configured');
+  try {
+    const { code } = req.query;
+    if (!code) return res.redirect('/?auth_error=missing_facebook_code');
+    
+    const appId = process.env.FACEBOOK_APP_ID;
+    const appSecret = process.env.FACEBOOK_APP_SECRET;
+    const redirectUri = `${process.env.APP_URL || `http://localhost:${PORT}`}/auth/facebook/callback`;
+    
+    // Exchange code for token
+    const tokenRes = await fetch(`https://graph.facebook.com/v18.0/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`);
+    const tokenData = await tokenRes.json();
+    if (tokenData.error) throw new Error(tokenData.error.message);
+    
+    // Get profile
+    const profileRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${tokenData.access_token}`);
+    const profile = await profileRes.json();
+    if (profile.error) throw new Error(profile.error.message);
+    
+    const user = await upsertUserFromProviderProfile({
+      id: profile.id,
+      name: profile.name,
+      email: profile.email,
+      picture: profile.picture?.data?.url
+    }, 'facebook');
+    
+    const payload = Buffer.from(JSON.stringify(user)).toString('base64url');
+    res.redirect(`/?auth_success=facebook&user=${payload}`);
+  } catch (err) {
+    console.error('Facebook callback error:', err.message);
+    res.redirect('/?auth_error=facebook_login_failed');
+  }
 });
+
 
 // GET /api/users/:email — get user by email
 app.get('/api/users/:email', async (req, res) => {

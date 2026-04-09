@@ -42,8 +42,8 @@
         <div class="onboarding-feature">🐴 <span>Hold styr på dine heste</span></div>
         <div class="onboarding-feature">📅 <span>Kalender og tidsplaner</span></div>
       </div>
-      <button class="onboarding-cta" onclick="showScreen('register')">Kom i gang</button>
-      <p class="onboarding-login-link">Har du allerede en konto? <a href="#" onclick="showScreen('login'); return false;">Log ind</a></p>
+      <button class="onboarding-cta" onclick="showScreen('login')">Log ind</button>
+      <button class="onboarding-secondary-cta" onclick="showScreen('register')">Jeg har ikke en bruger endnu</button>
     </div>
   </div>
 
@@ -56,10 +56,6 @@
       
       <!-- Social login sektion -->
       <div class="social-login">
-        <button class="btn-social btn-apple" onclick="loginWithApple()">
-          <svg width="20" height="20" viewBox="0 0 17 20" fill="currentColor"><path d="M15.011 11.235c-.015-2.613 2.15-3.868 2.246-3.926-1.218-1.782-3.116-2.025-3.793-2.053-1.616-.164-3.153.953-3.972.953-.818 0-2.086-.933-3.447-.905-1.789.027-3.438 1.04-4.358 2.639-1.855 3.22-.475 7.978 1.328 10.584.882 1.275 1.93 2.709 3.308 2.659 1.325-.053 1.828-.857 3.429-.857 1.6 0 2.053.857 3.454.83 1.425-.026 2.336-1.288 3.214-2.57.868-1.265 1.258-2.486 1.283-2.553-.027-.013-2.47-.946-2.495-3.801zm-2.617-7.792c.725-.878 1.214-2.098 1.08-3.315-1.046.042-2.31.696-3.059 1.574-.672.776-1.26 2.024-1.101 3.21.161.013.298.02.435.02.898 0 2.025-.515 2.645-1.489z"/></svg>
-          Fortsæt med Apple
-        </button>
         <button class="btn-social btn-google" onclick="loginWithGoogle()">
           <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><path d="M44.5 20H24V29H35.8C34.7 33.9 30.1 37 24 37C16.8 37 11 31.2 11 24C11 16.8 16.8 11 24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C11.8 2 2 11.8 2 24C2 36.2 11.8 46 24 46C36.2 46 46 36.2 46 24C46 22.6 45.8 21.3 44.5 20Z" fill="#4285F4"/><path d="M11 24C11 22.1 11.4 20.3 12.2 18.7L5.8 13.7C4 16.8 3 20.3 3 24C3 27.7 4 31.2 5.8 34.3L12.2 29.3C11.4 27.7 11 25.9 11 24Z" fill="#FBBC05"/><path d="M24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C17.7 2 12.2 4.6 8.3 8.7L14.7 13.7C17 12 20.3 11 24 11Z" fill="#EA4335"/><path d="M24 37C20.3 37 17 36 14.7 34.3L8.3 39.3C12.2 43.4 17.7 46 24 46C30 46 35 43.7 38.8 40.1L32.4 33.7C30.2 35.8 27.3 37 24 37Z" fill="#34A853"/></svg>
           Fortsæt med Google  
@@ -104,10 +100,6 @@
       
       <!-- Social login sektion -->
       <div class="social-login">
-        <button class="btn-social btn-apple" onclick="loginWithApple()">
-          <svg width="20" height="20" viewBox="0 0 17 20" fill="currentColor"><path d="M15.011 11.235c-.015-2.613 2.15-3.868 2.246-3.926-1.218-1.782-3.116-2.025-3.793-2.053-1.616-.164-3.153.953-3.972.953-.818 0-2.086-.933-3.447-.905-1.789.027-3.438 1.04-4.358 2.639-1.855 3.22-.475 7.978 1.328 10.584.882 1.275 1.93 2.709 3.308 2.659 1.325-.053 1.828-.857 3.429-.857 1.6 0 2.053.857 3.454.83 1.425-.026 2.336-1.288 3.214-2.57.868-1.265 1.258-2.486 1.283-2.553-.027-.013-2.47-.946-2.495-3.801zm-2.617-7.792c.725-.878 1.214-2.098 1.08-3.315-1.046.042-2.31.696-3.059 1.574-.672.776-1.26 2.024-1.101 3.21.161.013.298.02.435.02.898 0 2.025-.515 2.645-1.489z"/></svg>
-          Fortsæt med Apple
-        </button>
         <button class="btn-social btn-google" onclick="loginWithGoogle()">
           <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><path d="M44.5 20H24V29H35.8C34.7 33.9 30.1 37 24 37C16.8 37 11 31.2 11 24C11 16.8 16.8 11 24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C11.8 2 2 11.8 2 24C2 36.2 11.8 46 24 46C36.2 46 46 36.2 46 24C46 22.6 45.8 21.3 44.5 20Z" fill="#4285F4"/><path d="M11 24C11 22.1 11.4 20.3 12.2 18.7L5.8 13.7C4 16.8 3 20.3 3 24C3 27.7 4 31.2 5.8 34.3L12.2 29.3C11.4 27.7 11 25.9 11 24Z" fill="#FBBC05"/><path d="M24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C17.7 2 12.2 4.6 8.3 8.7L14.7 13.7C17 12 20.3 11 24 11Z" fill="#EA4335"/><path d="M24 37C20.3 37 17 36 14.7 34.3L8.3 39.3C12.2 43.4 17.7 46 24 46C30 46 35 43.7 38.8 40.1L32.4 33.7C30.2 35.8 27.3 37 24 37Z" fill="#34A853"/></svg>
           Fortsæt med Google  
@@ -402,21 +394,11 @@
   <script>
     // ===== AUTH HELPERS =====
     function loginWithGoogle() {
-      const clientId = window.GOOGLE_CLIENT_ID || '';
-      if (!clientId) { showToast('Google login konfigureres snart 🐴'); return; }
-      const redirect = encodeURIComponent(window.location.origin + '/auth/google/callback');
-      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirect}&response_type=code&scope=email%20profile`;
-    }
-
-    function loginWithApple() {
-      showToast('Apple login konfigureres snart 🐴');
+      window.location.href = '/auth/google';
     }
 
     function loginWithFacebook() {
-      const appId = window.FACEBOOK_APP_ID || '';
-      if (!appId) { showToast('Facebook login konfigureres snart 🐴'); return; }
-      const redirect = encodeURIComponent(window.location.origin + '/auth/facebook/callback');
-      window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirect}&scope=email,public_profile`;
+      window.location.href = '/auth/facebook';
     }
 
     async function hashPassword(password) {
@@ -441,6 +423,38 @@
 
     // ===== INIT =====
     async function init() {
+      const params = new URLSearchParams(window.location.search);
+      const authError = params.get('auth_error');
+      const authSuccess = params.get('auth_success');
+      const authUser = params.get('user');
+
+      if (authSuccess && authUser) {
+        try {
+          currentUser = JSON.parse(atob(authUser.replace(/-/g, '+').replace(/_/g, '/')));
+          localStorage.setItem('paddock_user', JSON.stringify(currentUser));
+          window.history.replaceState({}, '', '/');
+          enterApp();
+          showToast(`Logget ind med ${authSuccess.charAt(0).toUpperCase() + authSuccess.slice(1)} ✅`);
+          return;
+        } catch {
+          showToast(`${authSuccess} login lykkedes, men sessionen kunne ikke læses`);
+        }
+      }
+
+      if (authError) {
+        const errorMessages = {
+          google_not_configured: 'Google login er ikke konfigureret endnu',
+          google_start_failed: 'Kunne ikke starte Google login',
+          missing_google_code: 'Google login blev afbrudt',
+          google_login_failed: 'Google login fejlede',
+          facebook_not_configured: 'Facebook login er ikke konfigureret endnu',
+          missing_facebook_code: 'Facebook login blev afbrudt',
+          facebook_login_failed: 'Facebook login fejlede',
+        };
+        showToast(errorMessages[authError] || 'Login fejlede');
+        window.history.replaceState({}, '', '/');
+      }
+
       const savedUser = localStorage.getItem('paddock_user');
       if (savedUser) {
         try {

@@ -50,11 +50,15 @@ body {
 }
 .onboarding-cta:hover { background: #b89a5e; transform: scale(1.02); }
 .onboarding-cta:active { transform: scale(0.98); }
-.onboarding-login-link {
-  margin-top: 16px; font-size: 0.85rem; color: var(--text3);
+.onboarding-secondary-cta {
+  width: 100%; max-width: 320px; margin-top: 12px;
+  background: transparent; color: var(--text2); border: 1px solid var(--border);
+  padding: 13px 24px; border-radius: 14px; font-size: 0.95rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
   animation: fadeInUp 0.6s ease 0.5s both;
 }
-.onboarding-login-link a { color: var(--accent); text-decoration: none; }
+.onboarding-secondary-cta:hover { background: var(--surface); color: var(--text); border-color: var(--accent); }
+.onboarding-secondary-cta:active { transform: scale(0.98); }
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(16px); }

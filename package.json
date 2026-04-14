@@ -7,13 +7,16 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "convex:dev": "convex dev",
-    "convex:deploy": "convex deploy"
+    "convex:deploy": "convex deploy",
+    "test:ui:mobile": "node test-mobile-ui.js"
   },
   "dependencies": {
+    "brace-expansion": "^2.1.0",
     "convex": "^1.34.0",
-    "express": "^4.18.2",
+    "express": "^5.2.1",
     "googleapis": "^171.4.0",
     "node-fetch": "^2.7.0",
+    "playwright": "^1.54.2",
     "stripe": "^21.0.1"
   }
 }

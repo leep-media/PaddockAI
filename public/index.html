@@ -224,7 +224,7 @@
             <div class="next-up-countdown" id="next-up-countdown"></div>
           </div>
 
-          <h3>Mine ryttere i dag</h3>
+          <h3>Mine 3 næste ryttere</h3>
           <div class="rider-timeline" id="rider-timeline"></div>
 
           <div class="quick-add-section" id="quick-add-section">
@@ -1268,23 +1268,19 @@
       const container = document.getElementById('rider-timeline');
       const nextUpBox = document.getElementById('next-up-box');
 
-      let todayEntries = allTimelineEntries.filter(e => e.date === todayStr);
-      if (!todayEntries.length) {
-        const futureDates = [...new Set(allTimelineEntries.filter(e => e.date > todayStr).map(e => e.date))].sort();
-        if (futureDates.length) todayEntries = allTimelineEntries.filter(e => e.date === futureDates[0]);
-        else todayEntries = allTimelineEntries;
+      let upcomingEntries = allTimelineEntries.filter(e => e.startTime && e.startTime > new Date(now.getTime() - 5 * 60000));
+      if (!upcomingEntries.length) {
+        upcomingEntries = allTimelineEntries.filter(e => e.startTime);
       }
 
-      if (!todayEntries.length) {
-        container.innerHTML = '<p style="color:var(--text3); text-align:center; padding:20px;">Ingen starter fundet</p>';
+      if (!upcomingEntries.length) {
+        container.innerHTML = '<p style="color:var(--text3); text-align:center; padding:20px;">Ingen kommende starter fundet</p>';
         nextUpBox.style.display = 'none';
         return;
       }
 
-      let nextEntry = null;
-      for (const e of todayEntries) {
-        if (e.startTime && e.startTime > new Date(now.getTime() - 5 * 60000)) { nextEntry = e; break; }
-      }
+      const nextThreeEntries = upcomingEntries.slice(0, 3);
+      const nextEntry = nextThreeEntries[0];
 
       if (nextEntry && nextEntry.startTime) {
         const diffMin = Math.round((nextEntry.startTime - now) / 60000);
@@ -1305,7 +1301,7 @@
       }
 
       let html = '';
-      for (const e of todayEntries) {
+      for (const e of nextThreeEntries) {
         const timeStr = e.startTime ? `${String(e.startTime.getHours()).padStart(2,'0')}.${String(e.startTime.getMinutes()).padStart(2,'0')}` : '—';
         let status = '⏳', statusClass = '';
         if (e.startTime) {
@@ -1570,7 +1566,37 @@
     function showUpdateBtn() {}
 
     // ===== SERVICE WORKER =====
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('/sw.js');
+          await registration.update();
+
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (!newWorker) return;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
+
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (refreshing) return;
+            refreshing = true;
+            window.location.reload();
+          });
+        } catch (err) {
+          console.warn('Service worker update failed', err);
+        }
+      });
+    }
 
     // Vis success/cancel besked fra Stripe
     document.addEventListener('DOMContentLoaded', () => {

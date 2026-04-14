@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ridecoach-v2';
+const CACHE_NAME = 'paddockai-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -26,6 +26,12 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // Fetch strategy
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
@@ -41,9 +47,18 @@ self.addEventListener('fetch', (event) => {
         .catch(() => caches.match(event.request))
     );
   } else {
-    // Static: cache-first
+    // Static: stale-while-revalidate so app updates arrive automatically
     event.respondWith(
-      caches.match(event.request).then((r) => r || fetch(event.request))
+      caches.match(event.request).then((cached) => {
+        const networkFetch = fetch(event.request)
+          .then((response) => {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            return response;
+          })
+          .catch(() => cached);
+        return cached || networkFetch;
+      })
     );
   }
 });
@@ -51,12 +66,12 @@ self.addEventListener('fetch', (event) => {
 // Push notifications (PRO feature — ready for backend)
 self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
-  const title = data.title || 'Paddock';
+  const title = data.title || 'PaddockAI';
   const options = {
     body: data.body || 'En rytter starter snart!',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
-    tag: data.tag || 'ridecoach-notification',
+    tag: data.tag || 'paddockai-notification',
     data: data.url || '/',
     vibrate: [100, 50, 100]
   };

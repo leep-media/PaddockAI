@@ -636,9 +636,8 @@ app.get('/api/lists/:id/events', (req, res) => {
   res.on('close', () => clearInterval(hb));
 });
 
-// Set proper MIME type for manifest.json
-express.static.mime.define({'application/manifest+json': ['webmanifest', 'json']});
-
+// Express 5 no longer exposes express.static.mime, and modern setups already
+// serve .webmanifest correctly enough for our use here.
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Ensure data dir exists

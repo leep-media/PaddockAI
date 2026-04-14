@@ -228,9 +228,10 @@
           <div class="rider-timeline" id="rider-timeline"></div>
 
           <div class="quick-add-section" id="quick-add-section">
-            <h3 style="margin:0 0 8px;">Hurtig-tilføj rytter</h3>
-            <input type="search" id="quick-add-search" placeholder="🔍 Søg rytter til holdet...">
+            <h3 style="margin:0 0 8px;">Tilføj rytter</h3>
+            <input type="search" id="quick-add-search" placeholder="Søg rytter til holdet...">
             <div class="quick-add-results" id="quick-add-results"></div>
+            <button class="btn-secondary" id="quick-add-update-btn" onclick="applyQuickAddSelections()" style="display:none; margin-top:10px; width:100%;">Tilføj valgte ryttere</button>
           </div>
 
           <div class="pro-upgrade-banner">
@@ -1410,43 +1411,56 @@
     let quickAddRiders = [];
     function setupQuickAdd(showId, existingIds, allRiders) {
       quickAddRiders = allRiders.filter(r => !existingIds.has(r.id));
+      addRiders = quickAddRiders;
+      addRiderSelections = {};
       const search = document.getElementById('quick-add-search');
       const results = document.getElementById('quick-add-results');
-      results.innerHTML = ''; search.value = '';
-      search.oninput = () => {
+      const render = () => {
         const f = search.value.toLowerCase().trim();
         results.innerHTML = '';
         if (!f) return;
         const matches = quickAddRiders.filter(r => r.name.toLowerCase().includes(f) || (r.club || '').toLowerCase().includes(f)).slice(0, 10);
         for (const r of matches) {
-          const div = document.createElement('div');
-          div.className = 'quick-add-item';
-          div.innerHTML = `<span>${escAttr(r.name)} <span style="color:var(--text3); font-size:0.8rem;">${escAttr(r.club || '')}</span></span>
-            <button class="btn-secondary" onclick="quickAddRider(${r.id})">+ Tilføj</button>`;
-          results.appendChild(div);
+          const li = document.createElement('li');
+          li.className = 'rider-tree-item';
+          li.setAttribute('data-rider-item', r.id);
+          const origSel = riderSelections, origRiders = currentRiders;
+          riderSelections = addRiderSelections; currentRiders = addRiders;
+          li.innerHTML = renderRiderItemHTML(r);
+          addRiderSelections = riderSelections;
+          riderSelections = origSel; currentRiders = origRiders;
+          results.appendChild(li);
         }
         if (!matches.length) results.innerHTML = '<div style="color:var(--text3); font-size:0.85rem; padding:8px 0;">Ingen ryttere fundet</div>';
       };
+      results.innerHTML = '';
+      search.oninput = render;
+      render();
     }
 
-    async function quickAddRider(riderId) {
+    async function applyQuickAddSelections() {
       if (!currentListData) return;
-      // Check free plan limit
+      const selectedIds = Object.keys(addRiderSelections).map(Number);
+      if (!selectedIds.length) return;
       const riderCount = (currentListData.riderIds || []).length;
-      if (currentUser && currentUser.plan !== 'pro' && riderCount >= 3) {
+      if (currentUser && currentUser.plan !== 'pro' && (riderCount + selectedIds.length) > 3) {
         document.getElementById('limit-modal').style.display = 'flex';
         return;
       }
-      const newIds = [...(currentListData.riderIds || []), riderId];
+      const newIds = [...new Set([...(currentListData.riderIds || []), ...selectedIds])];
       const newSelections = currentListData.selections ? { ...currentListData.selections } : {};
-      newSelections[String(riderId)] = 'all';
+      for (const [riderId, horses] of Object.entries(addRiderSelections)) {
+        newSelections[riderId] = {};
+        for (const [horseName, csIds] of Object.entries(horses)) {
+          newSelections[riderId][horseName] = Array.from(csIds);
+        }
+      }
       try {
         await fetch(`/api/lists/${currentListId}/riders`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ riderIds: newIds, selections: newSelections })
         });
-        const r = quickAddRiders.find(r => r.id === riderId);
-        showToast(`✓ ${r ? r.name : 'Rytter'} tilføjet`, 2500);
+        showToast('✓ Ryttere tilføjet', 2500);
         await viewList(currentListId);
       } catch (err) { alert('Fejl: ' + err.message); }
     }
@@ -1561,7 +1575,13 @@
     // ===== ADD RIDERS (backward compat) =====
     let addRiderSelections = {};
     let addRiders = [];
-    function showUpdateBtn() {}
+    function showUpdateBtn() {
+      const btn = document.getElementById('quick-add-update-btn');
+      if (!btn) return;
+      const count = Object.keys(addRiderSelections).length;
+      btn.style.display = count ? 'block' : 'none';
+      btn.textContent = count ? `Tilføj ${count} valgt${count > 1 ? 'e ryttere' : ' rytter'}` : 'Tilføj valgte ryttere';
+    }
 
     // ===== SERVICE WORKER =====
     if ('serviceWorker' in navigator) {

@@ -161,9 +161,9 @@
 
           <div id="discipline-filter" class="discipline-filter">
             <button class="disc-btn active" data-discipline="all" onclick="setDiscipline('all')">Alle</button>
-            <button class="disc-btn" data-discipline="show_jumping" onclick="setDiscipline('show_jumping')">🐴 Spring</button>
-            <button class="disc-btn" data-discipline="dressage" onclick="setDiscipline('dressage')">💃 Dressur</button>
-            <button class="disc-btn" data-discipline="eventing" onclick="setDiscipline('eventing')">🏇 Military</button>
+            <button class="disc-btn" data-discipline="show_jumping" onclick="setDiscipline('show_jumping')">Spring</button>
+            <button class="disc-btn" data-discipline="dressage" onclick="setDiscipline('dressage')">Dressur</button>
+            <button class="disc-btn" data-discipline="eventing" onclick="setDiscipline('eventing')">Military</button>
           </div>
 
           <div id="show-search-wrapper" style="position:relative;">
@@ -788,6 +788,7 @@
         `${show.name} (${show.startDate}) <span class="chip-remove" onclick="clearShowSelection()">&times;</span>`;
       document.getElementById('show-selected-chip').style.display = 'block';
       document.getElementById('show-search-wrapper').style.display = 'none';
+      document.getElementById('discipline-filter').style.display = 'none';
       currentRiders = [];
       riderSelections = {};
       document.getElementById('riders-section').style.display = 'block';
@@ -799,6 +800,7 @@
       document.getElementById('show-select-value').value = '';
       document.getElementById('show-selected-chip').style.display = 'none';
       document.getElementById('show-search-wrapper').style.display = 'block';
+      document.getElementById('discipline-filter').style.display = 'flex';
       document.getElementById('riders-section').style.display = 'none';
       currentRiders = []; riderSelections = {};
       expandedRiders.clear(); expandedHorses.clear();

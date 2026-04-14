@@ -1139,7 +1139,9 @@
       } catch {}
 
       const btn = document.getElementById('create-btn');
-      btn.disabled = true; btn.textContent = 'Opretter...';
+      const countEl = document.getElementById('selected-count');
+      btn.disabled = true;
+      btn.textContent = 'Opretter...';
       try {
         const res = await fetch('/api/lists', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1149,8 +1151,9 @@
         await viewList(list.id);
       } catch (err) {
         alert('Fejl: ' + err.message);
-        const entryCount = Array.isArray(data.entries) ? data.entries.length : riderIds.length;
-        btn.disabled = false; btn.textContent = `Opret hold (${riderIds.length} ryttere, ${entryCount} starter)`;
+        const entryCount = Object.values(selections || {}).flatMap(v => v === 'all' ? [] : Object.values(v || {})).reduce((sum, horse) => sum + (horse === 'all' ? 1 : Array.isArray(horse) ? horse.length : 0), 0) || riderIds.length;
+        btn.disabled = false;
+        if (countEl) countEl.textContent = `${riderIds.length} ryttere, ${entryCount} starter`;
       }
     }
 

@@ -185,7 +185,7 @@
             <div id="riders-loading" class="loading" style="display:none;">Henter ryttere</div>
             <ul class="rider-list" id="rider-list"></ul>
             <input type="text" id="list-name-input" placeholder="Holdnavn (fx 'Team Jensen - Herning')">
-            <button id="create-btn" onclick="createList()" disabled>Opret hold (<span id="selected-count">0</span> ryttere)</button>
+            <button id="create-btn" onclick="createList()" disabled>Opret hold (<span id="selected-count">0 ryttere, 0 starter</span>)</button>
           </div>
 
           <!-- Free plan limit info -->
@@ -1118,7 +1118,7 @@
     }
     function updateCount() {
       const rc = getSelectedRiderCount(), ec = getSelectedEntryCount();
-      const label = ec !== rc ? `${rc} ryttere, ${ec} starter` : `${rc} ryttere`;
+      const label = `${rc} ryttere, ${ec} starter`;
       document.getElementById('selected-count').textContent = label;
       document.getElementById('create-btn').disabled = rc === 0;
     }
@@ -1149,7 +1149,8 @@
         await viewList(list.id);
       } catch (err) {
         alert('Fejl: ' + err.message);
-        btn.disabled = false; btn.textContent = `Opret hold (${riderIds.length} ryttere)`;
+        const entryCount = Array.isArray(data.entries) ? data.entries.length : riderIds.length;
+        btn.disabled = false; btn.textContent = `Opret hold (${riderIds.length} ryttere, ${entryCount} starter)`;
       }
     }
 

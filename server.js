@@ -114,10 +114,18 @@ function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-function buildGoogleOAuthClient() {
+function getAppBaseUrl(req) {
+  const configured = process.env.APP_URL || '';
+  if (configured) return configured.replace(/\/$/, '');
+  const proto = req?.headers?.['x-forwarded-proto'] || req?.protocol || 'http';
+  const host = req?.headers?.['x-forwarded-host'] || req?.headers?.host || `localhost:${PORT}`;
+  return `${proto}://${host}`.replace(/\/$/, '');
+}
+
+function buildGoogleOAuthClient(req) {
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${process.env.APP_URL || `http://localhost:${PORT}`}/auth/google/callback`;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${getAppBaseUrl(req)}/auth/google/callback`;
   if (!clientId || !clientSecret) return null;
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 }
@@ -238,13 +246,17 @@ app.post('/api/users', async (req, res) => {
 // GET /auth/google
 app.get('/auth/google', async (req, res) => {
   try {
-    const oauth2Client = buildGoogleOAuthClient();
+    const oauth2Client = buildGoogleOAuthClient(req);
     if (!oauth2Client) return res.redirect('/?auth_error=google_not_configured');
 
-    const state = Buffer.from(JSON.stringify({ returnTo: '/' })).toString('base64url');
+    const statePayload = {
+      returnTo: typeof req.query.returnTo === 'string' && req.query.returnTo.startsWith('/') ? req.query.returnTo : '/',
+      nonce: crypto.randomBytes(16).toString('hex')
+    };
+    const state = Buffer.from(JSON.stringify(statePayload)).toString('base64url');
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      prompt: 'consent',
+      prompt: 'select_account',
       scope: ['openid', 'email', 'profile'],
       state,
     });
@@ -258,21 +270,42 @@ app.get('/auth/google', async (req, res) => {
 // GET /auth/google/callback
 app.get('/auth/google/callback', async (req, res) => {
   try {
-    const oauth2Client = buildGoogleOAuthClient();
+    const oauth2Client = buildGoogleOAuthClient(req);
     if (!oauth2Client) return res.redirect('/?auth_error=google_not_configured');
 
-    const { code } = req.query;
+    const { code, state, error } = req.query;
+    if (error) return res.redirect(`/?auth_error=${encodeURIComponent(String(error))}`);
     if (!code) return res.redirect('/?auth_error=missing_google_code');
 
-    const { tokens } = await oauth2Client.getToken(code);
+    let returnTo = '/';
+    if (typeof state === 'string') {
+      try {
+        const parsed = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
+        if (parsed?.returnTo && String(parsed.returnTo).startsWith('/')) returnTo = String(parsed.returnTo);
+      } catch {}
+    }
+
+    const { tokens } = await oauth2Client.getToken(String(code));
     oauth2Client.setCredentials(tokens);
 
-    const oauth2 = google.oauth2({ auth: oauth2Client, version: 'v2' });
-    const { data: profile } = await oauth2.userinfo.get();
-    const user = await upsertUserFromProviderProfile(profile, 'google');
+    const ticket = await oauth2Client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload?.email) throw new Error('Google profile mangler email');
 
-    const payload = Buffer.from(JSON.stringify(user)).toString('base64url');
-    res.redirect(`/?auth_success=google&user=${payload}`);
+    const user = await upsertUserFromProviderProfile({
+      sub: payload.sub,
+      email: payload.email,
+      name: payload.name,
+      given_name: payload.given_name,
+      picture: payload.picture,
+    }, 'google');
+
+    const userPayload = Buffer.from(JSON.stringify(user)).toString('base64url');
+    const sep = returnTo.includes('?') ? '&' : '?';
+    res.redirect(`${returnTo}${sep}auth_success=google&user=${encodeURIComponent(userPayload)}`);
   } catch (err) {
     console.error('Google callback error:', err.message);
     res.redirect('/?auth_error=google_login_failed');
@@ -798,6 +831,7 @@ async function getRidersForShow(showId) {
         }
         if (!ridersMap[rid]) ridersMap[rid] = { id: rid, name: s.rider_name, club: s.club_name, entries: [] };
         ridersMap[rid].entries.push({
+          entryKey: `${csId}:${s.start_no || ''}:${s.horse_combination_no || ''}:${s.position || ''}`,
           classSectionId: csId, className: mcName, classNo: mcClassNo,
           date: mcDate, classStartAt: mcStartAt, startNo: s.start_no,
           startAt: s.start_at, horseName: s.horse_name,

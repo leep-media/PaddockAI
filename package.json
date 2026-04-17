@@ -8,7 +8,9 @@
     "dev": "node --watch server.js",
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy",
-    "test:ui:mobile": "node test-mobile-ui.js"
+    "test:ui:mobile": "node test-mobile-ui.js",
+    "test:auth": "node scripts/test-auth.js",
+    "test:guard": "node --check server.js && npm run test:auth"
   },
   "dependencies": {
     "brace-expansion": "^2.1.0",

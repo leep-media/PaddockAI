@@ -387,7 +387,8 @@
   <script>
     // ===== AUTH HELPERS =====
     function loginWithGoogle() {
-      window.location.href = '/auth/google';
+      const returnTo = window.location.pathname + window.location.search;
+      window.location.href = `/auth/google?returnTo=${encodeURIComponent(returnTo)}`;
     }
 
     function loginWithFacebook() {
@@ -423,7 +424,8 @@
 
       if (authSuccess && authUser) {
         try {
-          currentUser = JSON.parse(atob(authUser.replace(/-/g, '+').replace(/_/g, '/')));
+          const normalized = decodeURIComponent(authUser);
+          currentUser = JSON.parse(atob(normalized.replace(/-/g, '+').replace(/_/g, '/')));
           localStorage.setItem('paddock_user', JSON.stringify(currentUser));
           window.history.replaceState({}, '', '/');
           enterApp();
@@ -440,6 +442,7 @@
           google_start_failed: 'Kunne ikke starte Google login',
           missing_google_code: 'Google login blev afbrudt',
           google_login_failed: 'Google login fejlede',
+          access_denied: 'Google login blev afvist',
           facebook_not_configured: 'Facebook login er ikke konfigureret endnu',
           missing_facebook_code: 'Facebook login blev afbrudt',
           facebook_login_failed: 'Facebook login fejlede',
@@ -853,12 +856,15 @@
       return true;
     }
     function isRiderPartiallySelected(rider) { return !!riderSelections[rider.id] && !isRiderFullySelected(rider); }
+    function getEntrySelectionKey(e) {
+      return e.entryKey || `${e.classSectionId}:${e.startNo || ''}:${e.combinationNo || ''}:${e.position || ''}`;
+    }
     function isHorseFullySelected(rider, horseName) {
       const sel = riderSelections[rider.id];
       if (!sel || !sel[horseName]) return false;
       return sel[horseName].size === (rider.entries || []).filter(e => (e.horseName || 'Ukendt hest') === horseName).length;
     }
-    function isClassSelected(riderId, horseName, csId) { return riderSelections[riderId]?.[horseName]?.has(csId) || false; }
+    function isClassSelected(riderId, horseName, entryKey) { return riderSelections[riderId]?.[horseName]?.has(entryKey) || false; }
 
     function toggleRiderAll(rider, checked) {
       if (checked) {
@@ -866,7 +872,7 @@
         for (const e of (rider.entries || [])) {
           const h = e.horseName || 'Ukendt hest';
           if (!riderSelections[rider.id][h]) riderSelections[rider.id][h] = new Set();
-          riderSelections[rider.id][h].add(e.classSectionId);
+          riderSelections[rider.id][h].add(getEntrySelectionKey(e));
         }
       } else { delete riderSelections[rider.id]; }
       rerenderRiderItem(rider);
@@ -877,7 +883,7 @@
       if (!riderSelections[rider.id]) riderSelections[rider.id] = {};
       if (checked) {
         const entries = (rider.entries || []).filter(e => (e.horseName || 'Ukendt hest') === horseName);
-        riderSelections[rider.id][horseName] = new Set(entries.map(e => e.classSectionId));
+        riderSelections[rider.id][horseName] = new Set(entries.map(e => getEntrySelectionKey(e)));
       } else {
         delete riderSelections[rider.id][horseName];
         if (!Object.keys(riderSelections[rider.id]).length) delete riderSelections[rider.id];
@@ -885,12 +891,12 @@
       rerenderRiderItem(rider); updateCount();
     }
 
-    function toggleClassEntry(rider, horseName, csId, checked) {
+    function toggleClassEntry(rider, horseName, entryKey, checked) {
       if (!riderSelections[rider.id]) riderSelections[rider.id] = {};
       if (!riderSelections[rider.id][horseName]) riderSelections[rider.id][horseName] = new Set();
-      if (checked) riderSelections[rider.id][horseName].add(csId);
+      if (checked) riderSelections[rider.id][horseName].add(entryKey);
       else {
-        riderSelections[rider.id][horseName].delete(csId);
+        riderSelections[rider.id][horseName].delete(entryKey);
         if (!riderSelections[rider.id][horseName].size) delete riderSelections[rider.id][horseName];
         if (!Object.keys(riderSelections[rider.id]).length) delete riderSelections[rider.id];
       }
@@ -904,8 +910,12 @@
         if (!rider) continue;
         if (isRiderFullySelected(rider)) { result[riderId] = 'all'; continue; }
         result[riderId] = {};
-        for (const [horseName, csIds] of Object.entries(horses)) {
-          result[riderId][horseName] = isHorseFullySelected(rider, horseName) ? 'all' : [...csIds];
+        for (const [horseName, entryKeys] of Object.entries(horses)) {
+          result[riderId][horseName] = isHorseFullySelected(rider, horseName)
+            ? 'all'
+            : (rider.entries || [])
+                .filter(e => (e.horseName || 'Ukendt hest') === horseName && entryKeys.has(getEntrySelectionKey(e)))
+                .map(e => e.classSectionId);
         }
       }
       return result;
@@ -989,9 +999,10 @@
           if (hasMulti) {
             html += `<div class="rider-tree-children ${hExpanded ? 'open' : ''}">`;
             for (const e of hEntries) {
-              const cSel = isClassSelected(r.id, horseName, e.classSectionId);
+              const entryKey = getEntrySelectionKey(e);
+              const cSel = isClassSelected(r.id, horseName, entryKey);
               html += `<div class="rider-tree-row">
-                <input type="checkbox" ${cSel ? 'checked' : ''} data-check="class" data-rider-id="${r.id}" data-horse="${escAttr(horseName)}" data-cs-id="${e.classSectionId}">
+                <input type="checkbox" ${cSel ? 'checked' : ''} data-check="class" data-rider-id="${r.id}" data-horse="${escAttr(horseName)}" data-entry-key="${escAttr(entryKey)}">
                 <span class="tree-label tree-class-label"><span class="tree-class-time">${formatEntryDate(e)} ${formatEntryTime(e)}</span> ${e.classNo ? 'Kl. ' + e.classNo + ' - ' : ''}${escAttr(e.className)}</span>
               </div>`;
             }
@@ -1037,7 +1048,7 @@
 
         if (cb.dataset.check === 'rider') toggleRiderAllDirect(rider, cb.checked);
         else if (cb.dataset.check === 'horse') toggleHorseAll(rider, cb.dataset.horse, cb.checked);
-        else if (cb.dataset.check === 'class') toggleClassEntry(rider, cb.dataset.horse, Number(cb.dataset.csId), cb.checked);
+        else if (cb.dataset.check === 'class') toggleClassEntry(rider, cb.dataset.horse, cb.dataset.entryKey, cb.checked);
         if (inAdd) { addRiderSelections = riderSelections; riderSelections = origSel; currentRiders = origRiders; showUpdateBtn(); }
         return;
       }
@@ -1062,7 +1073,7 @@
         for (const e of (rider.entries || [])) {
           const h = e.horseName || 'Ukendt hest';
           if (!riderSelections[rider.id][h]) riderSelections[rider.id][h] = new Set();
-          riderSelections[rider.id][h].add(e.classSectionId);
+          riderSelections[rider.id][h].add(getEntrySelectionKey(e));
         }
       } else delete riderSelections[rider.id];
       rerenderRiderItem(rider); updateCount();

@@ -20,42 +20,74 @@
     .btn-facebook { color: #1877f2; border-color: #1877f2; }
     .divider { display: flex; align-items: center; gap: 12px; margin: 4px 0 16px; color: var(--text3); font-size: 0.85rem; }
     .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .auth-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; min-height: 100%; }
+    .auth-inline-login { max-width: 420px; width: 100%; }
+    .auth-inline-login .auth-title { margin-bottom: 6px; text-align: center; }
+    .auth-inline-login .auth-subtitle { margin-bottom: 22px; text-align: center; }
+    .auth-inline-login .auth-switch { text-align: center; margin-top: 20px; }
   </style>
 </head>
 <body>
 
   <!-- ========== ONBOARDING SCREEN ========== -->
   <div id="screen-onboarding" class="screen">
-    <div class="onboarding-container">
-      <div class="onboarding-logo">
-        <svg width="80" height="80" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="38" height="38" rx="9" fill="#c9a96e"/>
-          <path d="M11 28 L11 22 C11 18, 13 15, 15 13 L14 11 C14 10, 15 9, 16 9 L17 10 C18 9, 19 8.5, 20 8.5 C21 8.5, 22 9, 22.5 10 L24 9 C24.5 8.8, 25 9, 25 9.5 L24 11 C25 12, 26 14, 26 16 L26 18 C27 18.5, 27.5 19, 27.5 20 C27.5 21, 27 21.5, 26 22 L26 28 Z" fill="#0c0c0e"/>
-          <circle cx="20" cy="13" r="1.2" fill="#c9a96e"/>
-          <circle cx="15" cy="18.5" r="0.8" fill="#c9a96e"/>
-        </svg>
-      </div>
-      <h1 class="onboarding-title">PaddockAI</h1>
-      <p class="onboarding-tagline">Alt om dine heste — ét sted</p>
-      <div class="onboarding-features">
-        <div class="onboarding-feature">🏆 <span>Showplaner til stævner</span></div>
-        <div class="onboarding-feature">🐴 <span>Hold styr på dine heste</span></div>
-        <div class="onboarding-feature">📅 <span>Kalender og tidsplaner</span></div>
-      </div>
+    <div class="auth-shell">
+      <section class="auth-showcase">
+        <div class="auth-showcase-inner">
+          <div class="auth-kicker">STÆVNEDAG UDEN KAOS</div>
+          <h1>PaddockAI</h1>
+          <p>Byg skarpe stævneplaner på få minutter, hold styr på dine ryttere, og få overblik før dagen løber fra dig.</p>
+        </div>
 
-      <div class="social-login" style="margin-top:20px;">
-        <button class="btn-social btn-google" onclick="loginWithGoogle()">
-          <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><path d="M44.5 20H24V29H35.8C34.7 33.9 30.1 37 24 37C16.8 37 11 31.2 11 24C11 16.8 16.8 11 24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C11.8 2 2 11.8 2 24C2 36.2 11.8 46 24 46C36.2 46 46 36.2 46 24C46 22.6 45.8 21.3 44.5 20Z" fill="#4285F4"/><path d="M11 24C11 22.1 11.4 20.3 12.2 18.7L5.8 13.7C4 16.8 3 20.3 3 24C3 27.7 4 31.2 5.8 34.3L12.2 29.3C11.4 27.7 11 25.9 11 24Z" fill="#FBBC05"/><path d="M24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C17.7 2 12.2 4.6 8.3 8.7L14.7 13.7C17 12 20.3 11 24 11Z" fill="#EA4335"/><path d="M24 37C20.3 37 17 36 14.7 34.3L8.3 39.3C12.2 43.4 17.7 46 24 46C30 46 35 43.7 38.8 40.1L32.4 33.7C30.2 35.8 27.3 37 24 37Z" fill="#34A853"/></svg>
-          Fortsæt med Google
-        </button>
-        <button class="btn-social btn-facebook" onclick="loginWithFacebook()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          Fortsæt med Facebook
-        </button>
-      </div>
-      <div class="divider" style="margin-top:16px;"><span>eller</span></div>
-      <button class="onboarding-cta" onclick="showScreen('login')">Log ind med email</button>
-      <button class="onboarding-secondary-cta" onclick="showScreen('register')">Opret konto med email</button>
+        <div class="auth-content">
+          <div class="auth-inline-login">
+            <h2 class="auth-title">Log ind</h2>
+            <p class="auth-subtitle">Velkommen tilbage 🐴</p>
+
+            <div class="social-login" style="margin-top:0;">
+              <button class="btn-social btn-google" onclick="loginWithGoogle()">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><path d="M44.5 20H24V29H35.8C34.7 33.9 30.1 37 24 37C16.8 37 11 31.2 11 24C11 16.8 16.8 11 24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C11.8 2 2 11.8 2 24C2 36.2 11.8 46 24 46C36.2 46 46 36.2 46 24C46 22.6 45.8 21.3 44.5 20Z" fill="#4285F4"/><path d="M11 24C11 22.1 11.4 20.3 12.2 18.7L5.8 13.7C4 16.8 3 20.3 3 24C3 27.7 4 31.2 5.8 34.3L12.2 29.3C11.4 27.7 11 25.9 11 24Z" fill="#FBBC05"/><path d="M24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C17.7 2 12.2 4.6 8.3 8.7L14.7 13.7C17 12 20.3 11 24 11Z" fill="#EA4335"/><path d="M24 37C20.3 37 17 36 14.7 34.3L8.3 39.3C12.2 43.4 17.7 46 24 46C30 46 35 43.7 38.8 40.1L32.4 33.7C30.2 35.8 27.3 37 24 37Z" fill="#34A853"/></svg>
+                Fortsæt med Google
+              </button>
+              <button class="btn-social btn-facebook" onclick="loginWithFacebook()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                Fortsæt med Facebook
+              </button>
+            </div>
+
+            <div class="divider" style="margin:22px 0 16px;"><span>eller</span></div>
+
+            <form id="onboarding-login-form" onsubmit="handleLogin(event)">
+              <label class="auth-label">Email</label>
+              <input type="email" id="login-email" placeholder="din@email.dk" required autocomplete="email">
+              <label class="auth-label">Password</label>
+              <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+              <button type="submit" id="login-submit-btn">Log ind</button>
+            </form>
+
+            <p class="auth-switch">Ingen konto? <a href="#" onclick="showScreen('register'); return false;">Opret en her</a></p>
+          </div>
+        </div>
+
+        <div class="auth-feature-grid">
+          <div class="auth-feature-card">
+            <strong>🏆 Klare holdlister</strong>
+            <span>Saml ryttere og starter i ét overblik, klar til film og koordinering.</span>
+          </div>
+          <div class="auth-feature-card">
+            <strong>⚡ Hurtig adgang</strong>
+            <span>Log ind med Google eller Facebook, eller brug din almindelige konto.</span>
+          </div>
+          <div class="auth-feature-card">
+            <strong>🐴 Bygget til ridesport</strong>
+            <span>Designet til stævnedage, hvor tempoet er højt og overblik betyder alt.</span>
+          </div>
+          <div class="auth-feature-card">
+            <strong>📍 Mindre friktion</strong>
+            <span>Roligere onboarding, tydeligere hierarki og et mere premium førstehåndsindtryk.</span>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -103,36 +135,6 @@
     </div>
   </div>
 
-  <!-- ========== LOGIN SCREEN ========== -->
-  <div id="screen-login" class="screen" style="display:none;">
-    <div class="auth-container">
-      <div class="auth-back" onclick="showScreen('onboarding')">← Tilbage</div>
-      <h2 class="auth-title">Log ind</h2>
-      <p class="auth-subtitle">Velkommen tilbage 🐴</p>
-      
-      <!-- Social login sektion -->
-      <div class="social-login">
-        <button class="btn-social btn-google" onclick="loginWithGoogle()">
-          <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><path d="M44.5 20H24V29H35.8C34.7 33.9 30.1 37 24 37C16.8 37 11 31.2 11 24C11 16.8 16.8 11 24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C11.8 2 2 11.8 2 24C2 36.2 11.8 46 24 46C36.2 46 46 36.2 46 24C46 22.6 45.8 21.3 44.5 20Z" fill="#4285F4"/><path d="M11 24C11 22.1 11.4 20.3 12.2 18.7L5.8 13.7C4 16.8 3 20.3 3 24C3 27.7 4 31.2 5.8 34.3L12.2 29.3C11.4 27.7 11 25.9 11 24Z" fill="#FBBC05"/><path d="M24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C17.7 2 12.2 4.6 8.3 8.7L14.7 13.7C17 12 20.3 11 24 11Z" fill="#EA4335"/><path d="M24 37C20.3 37 17 36 14.7 34.3L8.3 39.3C12.2 43.4 17.7 46 24 46C30 46 35 43.7 38.8 40.1L32.4 33.7C30.2 35.8 27.3 37 24 37Z" fill="#34A853"/></svg>
-          Fortsæt med Google  
-        </button>
-        <button class="btn-social btn-facebook" onclick="loginWithFacebook()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          Fortsæt med Facebook
-        </button>
-      </div>
-      <div class="divider"><span>eller</span></div>
-
-      <form id="login-form" onsubmit="handleLogin(event)">
-        <label class="auth-label">Email</label>
-        <input type="email" id="login-email" placeholder="din@email.dk" required autocomplete="email">
-        <label class="auth-label">Password</label>
-        <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
-        <button type="submit" id="login-submit-btn">Log ind</button>
-      </form>
-      <p class="auth-switch">Ingen konto? <a href="#" onclick="showScreen('register'); return false;">Opret en her</a></p>
-    </div>
-  </div>
 
   <!-- ========== MAIN APP (after login) ========== -->
   <div id="screen-app" class="screen" style="display:none;">

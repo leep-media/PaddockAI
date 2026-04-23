@@ -42,8 +42,20 @@
         <div class="onboarding-feature">🐴 <span>Hold styr på dine heste</span></div>
         <div class="onboarding-feature">📅 <span>Kalender og tidsplaner</span></div>
       </div>
-      <button class="onboarding-cta" onclick="showScreen('login')">Log ind</button>
-      <button class="onboarding-secondary-cta" onclick="showScreen('register')">Jeg har ikke en bruger endnu</button>
+
+      <div class="social-login" style="margin-top:20px;">
+        <button class="btn-social btn-google" onclick="loginWithGoogle()">
+          <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><path d="M44.5 20H24V29H35.8C34.7 33.9 30.1 37 24 37C16.8 37 11 31.2 11 24C11 16.8 16.8 11 24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C11.8 2 2 11.8 2 24C2 36.2 11.8 46 24 46C36.2 46 46 36.2 46 24C46 22.6 45.8 21.3 44.5 20Z" fill="#4285F4"/><path d="M11 24C11 22.1 11.4 20.3 12.2 18.7L5.8 13.7C4 16.8 3 20.3 3 24C3 27.7 4 31.2 5.8 34.3L12.2 29.3C11.4 27.7 11 25.9 11 24Z" fill="#FBBC05"/><path d="M24 11C27.3 11 30.2 12.2 32.4 14.3L38.8 7.9C35 4.3 30 2 24 2C17.7 2 12.2 4.6 8.3 8.7L14.7 13.7C17 12 20.3 11 24 11Z" fill="#EA4335"/><path d="M24 37C20.3 37 17 36 14.7 34.3L8.3 39.3C12.2 43.4 17.7 46 24 46C30 46 35 43.7 38.8 40.1L32.4 33.7C30.2 35.8 27.3 37 24 37Z" fill="#34A853"/></svg>
+          Fortsæt med Google
+        </button>
+        <button class="btn-social btn-facebook" onclick="loginWithFacebook()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          Fortsæt med Facebook
+        </button>
+      </div>
+      <div class="divider" style="margin-top:16px;"><span>eller</span></div>
+      <button class="onboarding-cta" onclick="showScreen('login')">Log ind med email</button>
+      <button class="onboarding-secondary-cta" onclick="showScreen('register')">Opret konto med email</button>
     </div>
   </div>
 
@@ -392,7 +404,8 @@
     }
 
     function loginWithFacebook() {
-      window.location.href = '/auth/facebook';
+      const returnTo = window.location.pathname + window.location.search;
+      window.location.href = `/auth/facebook?returnTo=${encodeURIComponent(returnTo)}`;
     }
 
     async function hashPassword(password) {
@@ -446,6 +459,8 @@
           facebook_not_configured: 'Facebook login er ikke konfigureret endnu',
           missing_facebook_code: 'Facebook login blev afbrudt',
           facebook_login_failed: 'Facebook login fejlede',
+          access_denied: 'Login blev afvist',
+          user_denied: 'Login blev afvist',
         };
         showToast(errorMessages[authError] || 'Login fejlede');
         window.history.replaceState({}, '', '/');

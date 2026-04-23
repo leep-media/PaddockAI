@@ -130,6 +130,29 @@ function buildGoogleOAuthClient(req) {
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 }
 
+function buildFacebookRedirectUri(req) {
+  return `${getAppBaseUrl(req)}/auth/facebook/callback`;
+}
+
+function buildOAuthState(req) {
+  const statePayload = {
+    returnTo: typeof req.query.returnTo === 'string' && req.query.returnTo.startsWith('/') ? req.query.returnTo : '/',
+    nonce: crypto.randomBytes(16).toString('hex')
+  };
+  return Buffer.from(JSON.stringify(statePayload)).toString('base64url');
+}
+
+function parseOAuthReturnTo(state) {
+  let returnTo = '/';
+  if (typeof state === 'string') {
+    try {
+      const parsed = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
+      if (parsed?.returnTo && String(parsed.returnTo).startsWith('/')) returnTo = String(parsed.returnTo);
+    } catch {}
+  }
+  return returnTo;
+}
+
 function upsertJsonUserFromProvider(profile, provider) {
   const users = loadUsers();
   const email = String(profile.email || '').toLowerCase();
@@ -249,11 +272,7 @@ app.get('/auth/google', async (req, res) => {
     const oauth2Client = buildGoogleOAuthClient(req);
     if (!oauth2Client) return res.redirect('/?auth_error=google_not_configured');
 
-    const statePayload = {
-      returnTo: typeof req.query.returnTo === 'string' && req.query.returnTo.startsWith('/') ? req.query.returnTo : '/',
-      nonce: crypto.randomBytes(16).toString('hex')
-    };
-    const state = Buffer.from(JSON.stringify(statePayload)).toString('base64url');
+    const state = buildOAuthState(req);
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       prompt: 'select_account',
@@ -277,22 +296,30 @@ app.get('/auth/google/callback', async (req, res) => {
     if (error) return res.redirect(`/?auth_error=${encodeURIComponent(String(error))}`);
     if (!code) return res.redirect('/?auth_error=missing_google_code');
 
-    let returnTo = '/';
-    if (typeof state === 'string') {
-      try {
-        const parsed = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
-        if (parsed?.returnTo && String(parsed.returnTo).startsWith('/')) returnTo = String(parsed.returnTo);
-      } catch {}
-    }
+    const returnTo = parseOAuthReturnTo(state);
 
     const { tokens } = await oauth2Client.getToken(String(code));
     oauth2Client.setCredentials(tokens);
 
-    const ticket = await oauth2Client.verifyIdToken({
-      idToken: tokens.id_token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
+    let payload = null;
+    if (tokens.id_token) {
+      const ticket = await oauth2Client.verifyIdToken({
+        idToken: tokens.id_token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    }
+
+    if (!payload?.email && tokens.access_token) {
+      const userInfoRes = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+      if (!userInfoRes.ok) {
+        throw new Error(`Google userinfo fejlede (${userInfoRes.status})`);
+      }
+      payload = await userInfoRes.json();
+    }
+
     if (!payload?.email) throw new Error('Google profile mangler email');
 
     const user = await upsertUserFromProviderProfile({
@@ -307,50 +334,66 @@ app.get('/auth/google/callback', async (req, res) => {
     const sep = returnTo.includes('?') ? '&' : '?';
     res.redirect(`${returnTo}${sep}auth_success=google&user=${encodeURIComponent(userPayload)}`);
   } catch (err) {
-    console.error('Google callback error:', err.message);
+    console.error('Google callback error:', err.message, err.stack || '');
     res.redirect('/?auth_error=google_login_failed');
   }
 });
 
 // GET /auth/facebook
 app.get('/auth/facebook', (req, res) => {
-  const appId = process.env.FACEBOOK_APP_ID;
+  const appId = process.env.FACEBOOK_APP_ID || '';
   if (!appId) return res.redirect('/?auth_error=facebook_not_configured');
-  const redirectUri = encodeURIComponent(`${process.env.APP_URL || `http://localhost:${PORT}`}/auth/facebook/callback`);
-  res.redirect(`https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=email,public_profile`);
+
+  const redirectUri = encodeURIComponent(buildFacebookRedirectUri(req));
+  const state = buildOAuthState(req);
+  res.redirect(`https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&state=${encodeURIComponent(state)}&scope=email,public_profile`);
 });
 
-// GET /auth/facebook/callback  
+// GET /auth/facebook/callback
 app.get('/auth/facebook/callback', async (req, res) => {
   try {
-    const { code } = req.query;
-    if (!code) return res.redirect('/?auth_error=missing_facebook_code');
-    
-    const appId = process.env.FACEBOOK_APP_ID;
-    const appSecret = process.env.FACEBOOK_APP_SECRET;
-    const redirectUri = `${process.env.APP_URL || `http://localhost:${PORT}`}/auth/facebook/callback`;
-    
-    // Exchange code for token
-    const tokenRes = await fetch(`https://graph.facebook.com/v18.0/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`);
+    const { code, state, error, error_reason, error_description } = req.query;
+    const returnTo = parseOAuthReturnTo(state);
+
+    if (error) {
+      const authError = String(error_reason || error_description || error);
+      return res.redirect(`${returnTo}${returnTo.includes('?') ? '&' : '?'}auth_error=${encodeURIComponent(authError)}`);
+    }
+    if (!code) return res.redirect(`${returnTo}${returnTo.includes('?') ? '&' : '?'}auth_error=missing_facebook_code`);
+
+    const appId = process.env.FACEBOOK_APP_ID || '';
+    const appSecret = process.env.FACEBOOK_APP_SECRET || '';
+    if (!appId || !appSecret) return res.redirect(`${returnTo}${returnTo.includes('?') ? '&' : '?'}auth_error=facebook_not_configured`);
+
+    const redirectUri = buildFacebookRedirectUri(req);
+
+    const tokenRes = await fetch(`https://graph.facebook.com/v18.0/oauth/access_token?client_id=${encodeURIComponent(appId)}&client_secret=${encodeURIComponent(appSecret)}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${encodeURIComponent(String(code))}`);
     const tokenData = await tokenRes.json();
-    if (tokenData.error) throw new Error(tokenData.error.message);
-    
-    // Get profile
-    const profileRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${tokenData.access_token}`);
+    if (!tokenRes.ok || tokenData.error || !tokenData.access_token) {
+      throw new Error(tokenData?.error?.message || `Facebook token fejlede (${tokenRes.status})`);
+    }
+
+    const profileRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${encodeURIComponent(tokenData.access_token)}`);
     const profile = await profileRes.json();
-    if (profile.error) throw new Error(profile.error.message);
-    
+    if (!profileRes.ok || profile.error) {
+      throw new Error(profile?.error?.message || `Facebook profile fejlede (${profileRes.status})`);
+    }
+    if (!profile.email) {
+      throw new Error('Facebook profile mangler email. Tjek at appen har email-tilladelse og at kontoen deler email.');
+    }
+
     const user = await upsertUserFromProviderProfile({
       id: profile.id,
       name: profile.name,
       email: profile.email,
       picture: profile.picture?.data?.url
     }, 'facebook');
-    
+
     const payload = Buffer.from(JSON.stringify(user)).toString('base64url');
-    res.redirect(`/?auth_success=facebook&user=${payload}`);
+    const sep = returnTo.includes('?') ? '&' : '?';
+    res.redirect(`${returnTo}${sep}auth_success=facebook&user=${encodeURIComponent(payload)}`);
   } catch (err) {
-    console.error('Facebook callback error:', err.message);
+    console.error('Facebook callback error:', err.message, err.stack || '');
     res.redirect('/?auth_error=facebook_login_failed');
   }
 });

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Filmliste-app til danske ridestævner via Equipe Online",
   "main": "server.js",
+  "engines": {
+    "node": "22.22.2"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",

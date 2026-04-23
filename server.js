@@ -7,6 +7,10 @@ const { execFile } = require('child_process');
 const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STRIPE_SECRET_KEY) : null;
 const { google } = require('googleapis');
 
+const ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'paddockai2026';
+const ADMIN_SESSION_COOKIE = 'paddockai_admin';
+
 // ===== Convex HTTP Client (optional — falls back to JSON files) =====
 let ConvexHttpClient, api;
 try {
@@ -98,6 +102,29 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
 });
 
 app.use(express.json());
+
+function parseCookies(req) {
+  const header = req.headers.cookie || '';
+  return Object.fromEntries(header.split(';').map(part => part.trim()).filter(Boolean).map(part => {
+    const idx = part.indexOf('=');
+    return idx === -1 ? [part, ''] : [part.slice(0, idx), decodeURIComponent(part.slice(idx + 1))];
+  }));
+}
+
+function isAdminSessionValid(req) {
+  const cookies = parseCookies(req);
+  const expected = crypto.createHash('sha256').update(`${ADMIN_USER}:${ADMIN_PASSWORD}`).digest('hex');
+  return cookies[ADMIN_SESSION_COOKIE] === expected;
+}
+
+function setAdminSession(res) {
+  const value = crypto.createHash('sha256').update(`${ADMIN_USER}:${ADMIN_PASSWORD}`).digest('hex');
+  res.setHeader('Set-Cookie', `${ADMIN_SESSION_COOKIE}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 12}`);
+}
+
+function clearAdminSession(res) {
+  res.setHeader('Set-Cookie', `${ADMIN_SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
+}
 
 // ===== USERS: JSON file storage =====
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -477,21 +504,59 @@ app.post('/api/checkout', async (req, res) => {
   }
 });
 
+function renderAdminLogin(error = '') {
+  return `<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaddockAI Admin Login</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif; background:#0c0c0e; color:#ede9e0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .card { width:100%; max-width:420px; background:#161618; border:1px solid #2a2a2d; border-radius:24px; padding:28px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+    h1 { margin:0 0 8px; font-size:2rem; }
+    p { margin:0 0 22px; color:#8a8578; }
+    label { display:block; margin:0 0 6px; font-size:.82rem; color:#8a8578; text-transform:uppercase; letter-spacing:.04em; font-weight:600; }
+    input { width:100%; box-sizing:border-box; margin:0 0 14px; padding:12px 16px; border-radius:12px; border:1px solid #2a2a2d; background:#1e1e21; color:#ede9e0; font-size:1rem; }
+    button { width:100%; padding:12px 16px; border:0; border-radius:12px; background:#c9a96e; color:#0c0c0e; font-weight:700; font-size:1rem; cursor:pointer; }
+    .error { margin:0 0 16px; padding:12px 14px; border-radius:12px; background:rgba(184,92,92,.12); border:1px solid rgba(184,92,92,.35); color:#ffb4b4; }
+  </style>
+</head>
+<body>
+  <form class="card" method="POST" action="/admin/login">
+    <h1>Admin login</h1>
+    <p>Log ind for at administrere PaddockAI.</p>
+    ${error ? `<div class="error">${error}</div>` : ''}
+    <label for="username">Brugernavn</label>
+    <input id="username" name="username" autocomplete="username" required>
+    <label for="password">Kodeord</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button type="submit">Log ind</button>
+  </form>
+</body>
+</html>`;
+}
+
 // Middleware til admin routes
 function requireAdmin(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth) {
-    res.set('WWW-Authenticate', 'Basic realm="PaddockAI Admin"');
-    return res.status(401).send('Authentication required');
-  }
-  const [type, creds] = auth.split(' ');
-  const [user, pass] = Buffer.from(creds, 'base64').toString().split(':');
-  const adminPass = process.env.ADMIN_PASSWORD || 'paddockai2026';
-  if (user !== 'admin' || pass !== adminPass) {
-    return res.status(403).send('Forbidden');
-  }
-  next();
+  if (isAdminSessionValid(req)) return next();
+  return res.status(401).send(renderAdminLogin());
 }
+
+app.post('/admin/login', express.urlencoded({ extended: false }), (req, res) => {
+  const { username, password } = req.body;
+  if (username === ADMIN_USER && password === ADMIN_PASSWORD) {
+    setAdminSession(res);
+    return res.redirect('/admin');
+  }
+  return res.status(401).send(renderAdminLogin('Forkert brugernavn eller kodeord.'));
+});
+
+app.post('/admin/logout', (req, res) => {
+  clearAdminSession(res);
+  res.redirect('/admin');
+});
 
 // GET /admin — admin panel
 app.get('/admin', requireAdmin, async (req, res) => {
@@ -547,7 +612,14 @@ app.get('/admin', requireAdmin, async (req, res) => {
 </style>
 </head>
 <body>
-<h1>🐴 PaddockAI Admin</h1>
+<div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+  <div>
+    <h1>🐴 PaddockAI Admin</h1>
+  </div>
+  <form method="POST" action="/admin/logout" style="margin:0;">
+    <button class="btn" type="submit">Log ud</button>
+  </form>
+</div>
 <nav>
   <a href="#users">Brugere</a>
   <a href="#roadmap">Roadmap</a>

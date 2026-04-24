@@ -28,7 +28,8 @@ async function convexQuery(path, args = {}) {
       convexInitError = `HTTP ${resp.status}: ${text.substring(0,200)}`;
       return null;
     }
-    return await resp.json();
+    const json = await resp.json();
+    return json.value !== undefined ? json.value : json;
   } catch (e) {
     convexInitError = `convexQuery error: ${e.message}`;
     return null;
@@ -48,7 +49,8 @@ async function convexMutation(path, args = {}) {
       convexInitError = `HTTP ${resp.status}: ${text.substring(0,200)}`;
       return null;
     }
-    return await resp.json();
+    const json = await resp.json();
+    return json.value !== undefined ? json.value : json;
   } catch (e) {
     convexInitError = `convexMutation error: ${e.message}`;
     return null;

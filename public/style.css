@@ -920,6 +920,30 @@ h3 { color: var(--text2); margin: 16px 0 8px; font-size: 0.8rem; font-weight: 60
   text-transform: none;
   letter-spacing: -0.01em;
 }
+.saved-lists-empty {
+  padding: 18px 14px;
+  border-radius: 16px;
+  border: 1px dashed rgba(201,169,110,0.22);
+  background: linear-gradient(180deg, rgba(201,169,110,0.05), rgba(255,255,255,0.01));
+  text-align: center;
+}
+.saved-lists-empty-icon {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+}
+.saved-lists-empty-title {
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.saved-lists-empty-text {
+  color: var(--text2);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  max-width: 30ch;
+  margin: 0 auto;
+}
 .edit-lists-btn {
   width: auto !important; padding: 6px 12px !important; font-size: 0.75rem !important;
   margin: 0 !important;

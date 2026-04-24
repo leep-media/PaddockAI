@@ -1236,7 +1236,14 @@
         const qs = currentUser?.email ? `?email=${encodeURIComponent(currentUser.email)}${currentUser.id ? `&userId=${encodeURIComponent(currentUser.id)}` : ''}` : '';
         const res = await fetch('/api/lists' + qs);
         const lists = await res.json();
-        if (!lists.length) { container.innerHTML = ''; return; }
+        if (!lists.length) {
+          container.innerHTML = `<div class="saved-lists-empty">
+            <div class="saved-lists-empty-icon">📋</div>
+            <div class="saved-lists-empty-title">Dine hold vises her</div>
+            <div class="saved-lists-empty-text">Når du opretter dit første hold, dukker det op her på forsiden, så du hurtigt kan åbne det igen.</div>
+          </div>`;
+          return;
+        }
         let html = `<div class="saved-lists-header"><h3>Dine hold</h3>
           <button class="btn-secondary edit-lists-btn ${editMode ? 'active' : ''}" onclick="toggleEditMode()">Rediger</button></div>`;
         for (const s of lists) {

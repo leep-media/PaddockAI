@@ -1034,12 +1034,25 @@ app.post('/api/lists', async (req, res) => {
   }
 });
 
+    // GET /api/debug - Debug info
+app.get('/api/debug', (req, res) => {
+  try {
+    const convex = getConvex();
+    res.json({
+      hasConvex: !!convex,
+      convexUrl: process.env.CONVEX_URL || '(not set)',
+      hasFs: typeof fs === 'object',
+      dataDir: DATA_DIR,
+      filesInDir: fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'))
+    });
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+});
+
     // GET /api/lists - Saved lists for current user
 app.get('/api/lists', async (req, res) => {
   try {
-    const userId = req.query.userId ? String(req.query.userId) : '';
-    let email = req.query.email ? String(req.query.email).toLowerCase() : '';
-
     const convex = getConvex();
 
     // Convex path

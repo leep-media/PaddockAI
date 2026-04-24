@@ -1179,17 +1179,19 @@
         if (inAdd) { origSel = riderSelections; origRiders = currentRiders; riderSelections = addRiderSelections; currentRiders = addRiders; }
 
         // Free plan: check limit before allowing adding a NEW rider
-        if (cb.dataset.check === 'rider' && cb.checked && !inAdd) {
+        const isCurrentlyChecked = cb.classList.contains('checked');
+        const newChecked = !isCurrentlyChecked;
+
+        if (cb.dataset.check === 'rider' && newChecked && !inAdd) {
           if (!riderSelections[riderId] && !checkFreeLimit()) {
-            cb.checked = false;
             if (inAdd) { riderSelections = origSel; currentRiders = origRiders; }
             return;
           }
         }
 
-        if (cb.dataset.check === 'rider') toggleRiderAllDirect(rider, cb.checked);
-        else if (cb.dataset.check === 'horse') toggleHorseAll(rider, cb.dataset.horse, cb.checked);
-        else if (cb.dataset.check === 'class') toggleClassEntry(rider, cb.dataset.horse, cb.dataset.entryKey, cb.checked);
+        if (cb.dataset.check === 'rider') toggleRiderAllDirect(rider, newChecked);
+        else if (cb.dataset.check === 'horse') toggleHorseAll(rider, cb.dataset.horse, newChecked);
+        else if (cb.dataset.check === 'class') toggleClassEntry(rider, cb.dataset.horse, cb.dataset.entryKey, newChecked);
         if (inAdd) { addRiderSelections = riderSelections; riderSelections = origSel; currentRiders = origRiders; showUpdateBtn(); }
         return;
       }

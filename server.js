@@ -1034,7 +1034,7 @@ app.post('/api/lists', async (req, res) => {
   }
 });
 
-// GET /api/lists - Saved lists for current user
+    // GET /api/lists - Saved lists for current user
 app.get('/api/lists', async (req, res) => {
   try {
     const userId = req.query.userId ? String(req.query.userId) : '';
@@ -1047,14 +1047,17 @@ app.get('/api/lists', async (req, res) => {
         const owner = await getConvex().query(api.users.getByEmail, { email });
         ownerId = owner?._id || '';
       }
-      let lists = await getConvex().query(api.lists.getAll, { userId: ownerId || undefined });
-      if ((!lists || !lists.length) && ownerId) {
-        const allLists = await getConvex().query(api.lists.getAll, {});
-        lists = allLists.filter(l => !l.userId);
-      }
-      if ((!lists || !lists.length) && email) {
-        return res.json([]);
-      }
+      
+      // Fetch all to verify logic
+      const allLists = await getConvex().query(api.lists.getAll, {});
+      
+      let lists = allLists.filter(l => {
+        if (ownerId && l.userId === ownerId) return true;
+        // Fallback for migrated lists (no userId yet)
+        if (!l.userId) return true;
+        return false;
+      });
+
       return res.json(lists.map(l => ({
         id: l._id,
         listName: l.listName || l.showName,

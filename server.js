@@ -1054,6 +1054,8 @@ app.get('/api/debug', (req, res) => {
 app.get('/api/lists', async (req, res) => {
   try {
     const convex = getConvex();
+    const userId = req.query.userId ? String(req.query.userId) : '';
+    let email = req.query.email ? String(req.query.email).toLowerCase() : '';
 
     // Convex path
     if (convex) {

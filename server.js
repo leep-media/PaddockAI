@@ -1054,6 +1054,20 @@ app.get('/api/lists', async (req, res) => {
       
       const lists = await getConvex().query(api.lists.getAll, { userId: ownerId || undefined });
       
+      if (!lists || !lists.length) {
+        // Fallback: if no ownerId found or no lists for owner, return ALL as a safety measure for now
+        const all = await getConvex().query(api.lists.getAll, {});
+        return res.json(all.map(l => ({
+          id: l._id,
+          listName: l.listName || l.showName,
+          showName: l.showName,
+          startDate: l.startDate,
+          endDate: l.endDate,
+          riderCount: (l.riderIds || []).length,
+          createdAt: l.createdAt
+        })));
+      }
+
       return res.json(lists.map(l => ({
         id: l._id,
         listName: l.listName || l.showName,

@@ -38,11 +38,18 @@ input:focus { border-color: rgba(255,255,255,0.2); }
   gap: 20px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .planner-shell {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+}
+
+/* Fix desktop layout when right panel is hidden on home */
+#sp-page-create .planner-shell {
+  grid-template-columns: 1fr;
+  max-width: 680px;
+  margin: 0 auto;
 }
 
 .planner-card {

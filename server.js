@@ -1051,15 +1051,12 @@ app.get('/api/lists', async (req, res) => {
       const allLists = await getConvex().query(api.lists.getAll, {});
       
       // LOGGING FOR DEBUGGING
-      console.log(`[API] Fetching lists for ownerId: ${ownerId}, email: ${email}. Found ${allLists.length} total.`);
+      console.log(`[API] DEBUG: ownerId=${ownerId}, email=${email}. Total Convex lists=${allLists.length}`);
 
-      const lists = allLists.filter(l => {
-        if (ownerId && l.userId === ownerId) return true;
-        if (!l.userId) return true;
-        return false;
-      });
+      // FORCE RETURN ALL FOR NOW TO TEST
+      const lists = allLists;
 
-      console.log(`[API] Returning ${lists.length} lists after filter.`);
+      console.log(`[API] Returning ${lists.length} lists total.`);
 
       return res.json(lists.map(l => ({
         id: l._id,

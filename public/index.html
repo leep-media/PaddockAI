@@ -213,7 +213,7 @@
             <div class="planner-suggestions">
               <div class="planner-suggestions-label">Foreslået · denne uge</div>
               <div class="planner-suggestion-list" id="planner-suggestion-list">
-                <div class="planner-suggestion-item is-live">
+                <div class="planner-suggestion-item is-live" onclick="selectSuggestedShow('Kolding Rideklub', 'show_jumping')">
                   <div class="planner-suggestion-accent"></div>
                   <div class="planner-suggestion-main">
                     <div class="planner-suggestion-name">Kolding Rideklub</div>
@@ -221,7 +221,7 @@
                   </div>
                   <div class="planner-suggestion-status">I gang</div>
                 </div>
-                <div class="planner-suggestion-item">
+                <div class="planner-suggestion-item" onclick="selectSuggestedShow('Vejle Rideklub', 'dressage')">
                   <div class="planner-suggestion-accent alt"></div>
                   <div class="planner-suggestion-main">
                     <div class="planner-suggestion-name">Vejle Rideklub</div>
@@ -229,7 +229,7 @@
                   </div>
                   <div class="planner-suggestion-status muted">Søn</div>
                 </div>
-                <div class="planner-suggestion-item">
+                <div class="planner-suggestion-item" onclick="selectSuggestedShow('Herning Militaryklub', 'eventing')">
                   <div class="planner-suggestion-accent warm"></div>
                   <div class="planner-suggestion-main">
                     <div class="planner-suggestion-name">Herning Militaryklub</div>
@@ -273,7 +273,7 @@
             </div>
 
             <div class="planner-panel planner-right">
-              <div class="planner-dashboard-card">
+              <div class="planner-dashboard-card" id="planner-dashboard-right" style="display:none;">
                 <div class="planner-dashboard-head">
                   <div class="planner-dashboard-title">PaddockAI</div>
                   <div id="planner-live-indicator" class="planner-live-indicator">● Live</div>
@@ -791,6 +791,7 @@
     function showSpPage(page) {
       document.getElementById('sp-page-create').style.display = page === 'create' ? '' : 'none';
       document.getElementById('sp-page-view').style.display = page === 'view' ? '' : 'none';
+      document.getElementById('planner-dashboard-right').style.display = page === 'view' ? 'block' : 'none';
       if (page === 'create') {
         history.replaceState(null, '', location.pathname);
         if (sseConnection) { sseConnection.close(); sseConnection = null; }
@@ -892,6 +893,17 @@
         dd.appendChild(li);
       }
       dd.style.display = 'block';
+    }
+
+    function selectSuggestedShow(name, discipline) {
+      const match = currentShows.find(s => s.name.toLowerCase().includes(name.toLowerCase()));
+      if (match) {
+        selectShow(match);
+      } else {
+        document.getElementById('show-search').value = name;
+        setDiscipline(discipline);
+        renderShowDropdown(name);
+      }
     }
 
     function selectShow(show) {

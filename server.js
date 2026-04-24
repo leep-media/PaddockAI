@@ -18,7 +18,7 @@ const CONVEX_URL = process.env.CONVEX_URL || 'https://blessed-lemur-987.eu-west-
 async function convexQuery(path, args = {}) {
   if (!CONVEX_URL) { convexInitError = 'No CONVEX_URL'; return null; }
   try {
-    const resp = await fetch(`${CONVEX_URL}/query`, {
+    const resp = await fetch(`${CONVEX_URL}/api/query`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path, args })
@@ -38,7 +38,7 @@ async function convexQuery(path, args = {}) {
 async function convexMutation(path, args = {}) {
   if (!CONVEX_URL) { convexInitError = 'No CONVEX_URL'; return null; }
   try {
-    const resp = await fetch(`${CONVEX_URL}/mutation`, {
+    const resp = await fetch(`${CONVEX_URL}/api/mutation`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path, args })

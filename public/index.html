@@ -167,38 +167,64 @@
       <div id="tab-showplaner" class="tab-content">
 
         <!-- Sub-page: Create/List -->
-        <div id="sp-page-create">
-          <h2 class="tab-title">🏆 Showplaner</h2>
-          <p class="tab-desc">Vælg stævne og ryttere til dit hold</p>
-
-          <div id="discipline-filter" class="discipline-filter">
-            <button class="disc-btn active" data-discipline="all" onclick="setDiscipline('all')">Alle</button>
-            <button class="disc-btn" data-discipline="show_jumping" onclick="setDiscipline('show_jumping')">Spring</button>
-            <button class="disc-btn" data-discipline="dressage" onclick="setDiscipline('dressage')">Dressur</button>
-            <button class="disc-btn" data-discipline="eventing" onclick="setDiscipline('eventing')">Military</button>
-          </div>
-
-          <div id="show-search-wrapper" style="position:relative;">
-            <input type="search" id="show-search" placeholder="🔍 Søg stævne..." autocomplete="off">
-            <ul class="dropdown-list" id="show-dropdown" style="display:none;"></ul>
-          </div>
-          <input type="hidden" id="show-select-value" value="">
-          <div id="show-selected-chip" style="display:none; margin-bottom:12px;">
-            <span class="chip" id="show-chip-inner"></span>
-          </div>
-
-          <div id="riders-section" style="display:none;">
-            <input type="search" id="rider-search" placeholder="🔍 Søg rytter...">
-            <input type="hidden" id="riders-loaded" value="">
-            <div class="select-controls">
-              <button class="btn-secondary" onclick="selectAll()">Vælg alle</button>
-              <button class="btn-secondary" onclick="selectNone()">Fravælg alle</button>
+        <div id="sp-page-create" class="showplaner-page">
+          <section class="showplaner-hero">
+            <div class="showplaner-hero-copy">
+              <span class="showplaner-kicker">🏆 Showplaner</span>
+              <h2 class="tab-title">Byg dit hold hurtigere</h2>
+              <p class="tab-desc">Find stævnet, vælg ryttere og lav en skarp plan på få sekunder.</p>
             </div>
-            <div id="riders-loading" class="loading" style="display:none;">Henter ryttere</div>
-            <ul class="rider-list" id="rider-list"></ul>
-            <input type="text" id="list-name-input" placeholder="Holdnavn (fx 'Team Jensen - Herning')">
-            <button id="create-btn" onclick="createList()" disabled>Opret hold (<span id="selected-count">0 ryttere, 0 starter</span>)</button>
-          </div>
+            <div class="showplaner-hero-glow"></div>
+          </section>
+
+          <section class="showplaner-builder-card">
+            <div class="builder-section-head">
+              <span class="builder-step">01</span>
+              <div>
+                <h3 class="builder-title">Vælg disciplin og stævne</h3>
+                <p class="builder-subtitle">Start med at filtrere og vælge det rigtige stævne.</p>
+              </div>
+            </div>
+
+            <div id="discipline-filter" class="discipline-filter">
+              <button class="disc-btn active" data-discipline="all" onclick="setDiscipline('all')">Alle</button>
+              <button class="disc-btn" data-discipline="show_jumping" onclick="setDiscipline('show_jumping')">Spring</button>
+              <button class="disc-btn" data-discipline="dressage" onclick="setDiscipline('dressage')">Dressur</button>
+              <button class="disc-btn" data-discipline="eventing" onclick="setDiscipline('eventing')">Military</button>
+            </div>
+
+            <div id="show-search-wrapper" class="show-search-shell">
+              <input type="search" id="show-search" placeholder="🔍 Søg stævne..." autocomplete="off">
+              <ul class="dropdown-list" id="show-dropdown" style="display:none;"></ul>
+            </div>
+            <input type="hidden" id="show-select-value" value="">
+            <div id="show-selected-chip" class="show-selected-chip" style="display:none;">
+              <span class="chip chip-show" id="show-chip-inner"></span>
+            </div>
+
+            <div id="riders-section" class="riders-builder" style="display:none;">
+              <div class="builder-section-head builder-section-head-tight">
+                <span class="builder-step">02</span>
+                <div>
+                  <h3 class="builder-title">Vælg ryttere</h3>
+                  <p class="builder-subtitle">Sæt flueben ved ryttere, heste eller enkelte starter.</p>
+                </div>
+              </div>
+              <input type="search" id="rider-search" placeholder="🔍 Søg rytter...">
+              <input type="hidden" id="riders-loaded" value="">
+              <div class="select-controls">
+                <button class="btn-secondary" onclick="selectAll()">Vælg alle</button>
+                <button class="btn-secondary" onclick="selectNone()">Fravælg alle</button>
+              </div>
+              <div id="riders-loading" class="loading" style="display:none;">Henter ryttere</div>
+              <ul class="rider-list" id="rider-list"></ul>
+              <div class="builder-footer-card">
+                <div class="builder-count-pill">Valgt nu: <span id="selected-count">0 ryttere, 0 starter</span></div>
+                <input type="text" id="list-name-input" placeholder="Holdnavn (fx 'Team Jensen - Herning')">
+                <button id="create-btn" onclick="createList()" disabled>Opret hold</button>
+              </div>
+            </div>
+          </section>
 
           <!-- Free plan limit info -->
           <div class="plan-info-card" id="plan-info-card">
@@ -206,7 +232,9 @@
             <button class="btn-upgrade-small" onclick="showProModal()">⭐ PRO</button>
           </div>
 
-          <div id="saved-lists"></div>
+          <section class="saved-lists-section">
+            <div id="saved-lists"></div>
+          </section>
         </div>
 
         <!-- Sub-page: View/Dashboard -->

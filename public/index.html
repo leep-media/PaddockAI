@@ -169,14 +169,23 @@
         <!-- Sub-page: Create/List -->
         <div id="sp-page-create" class="showplaner-page">
           <section class="saved-lists-section">
+            <div class="home-section-head">
+              <div>
+                <div class="home-eyebrow">Dine hold</div>
+                <h2 class="home-section-title">Dine hold</h2>
+                <p class="home-section-text">Her finder du de hold, du allerede har oprettet.</p>
+              </div>
+            </div>
             <div id="saved-lists"></div>
           </section>
 
           <section class="showplaner-builder-card">
-            <div class="showplaner-hero-copy compact">
-              <span class="showplaner-kicker">🏆 Showplaner</span>
-              <h2 class="tab-title">Dit stævneoverblik starter her</h2>
-              <p class="tab-desc">Vælg stævne, markér ryttere og opret dit hold uden unødige trin.</p>
+            <div class="home-section-head create-head">
+              <div>
+                <div class="home-eyebrow">Opret nyt hold</div>
+                <h2 class="home-section-title">Dit stævneoverblik starter her</h2>
+                <p class="home-section-text">Vælg stævne, markér ryttere og opret dit hold uden unødige trin.</p>
+              </div>
             </div>
 
             <div class="builder-section-head">
@@ -1239,8 +1248,9 @@
         if (!lists.length) {
           container.innerHTML = `<div class="saved-lists-empty">
             <div class="saved-lists-empty-icon">📋</div>
-            <div class="saved-lists-empty-title">Dine hold vises her</div>
+            <div class="saved-lists-empty-title">Ingen hold endnu</div>
             <div class="saved-lists-empty-text">Når du opretter dit første hold, dukker det op her på forsiden, så du hurtigt kan åbne det igen.</div>
+            <div class="saved-lists-empty-hint">Start med at vælge et stævne længere nede på siden.</div>
           </div>`;
           return;
         }

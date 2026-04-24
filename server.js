@@ -991,11 +991,17 @@ function shouldIncludeStart(start, selections, classSectionId) {
 // POST /api/lists - Create film list
 app.post('/api/lists', async (req, res) => {
   try {
-    const { showId, showName, startDate, endDate, riderIds, selections, listName } = req.body;
+    const { showId, showName, startDate, endDate, riderIds, selections, listName, userId, email } = req.body;
 
     // Convex path
     if (getConvex()) {
+      let ownerId = userId;
+      if (!ownerId && email) {
+        const owner = await getConvex().query(api.users.getByEmail, { email });
+        ownerId = owner?._id;
+      }
       const list = await getConvex().mutation(api.lists.create, {
+        userId: ownerId,
         showId, showName,
         listName: listName || showName,
         startDate, endDate,
@@ -1009,6 +1015,8 @@ app.post('/api/lists', async (req, res) => {
     const id = crypto.randomUUID();
     const list = {
       id,
+      userId: userId || null,
+      email: email ? String(email).toLowerCase() : null,
       showId,
       showName,
       listName: listName || showName,
@@ -1026,12 +1034,20 @@ app.post('/api/lists', async (req, res) => {
   }
 });
 
-// GET /api/lists - All saved lists
+// GET /api/lists - Saved lists for current user
 app.get('/api/lists', async (req, res) => {
   try {
+    const userId = req.query.userId ? String(req.query.userId) : '';
+    const email = req.query.email ? String(req.query.email).toLowerCase() : '';
+
     // Convex path
     if (getConvex()) {
-      const lists = await getConvex().query(api.lists.getAll, {});
+      let ownerId = userId;
+      if (!ownerId && email) {
+        const owner = await getConvex().query(api.users.getByEmail, { email });
+        ownerId = owner?._id || '';
+      }
+      const lists = await getConvex().query(api.lists.getAll, { userId: ownerId || undefined });
       return res.json(lists.map(l => ({
         id: l._id,
         listName: l.listName || l.showName,
@@ -1049,6 +1065,11 @@ app.get('/api/lists', async (req, res) => {
       try { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), 'utf8')); } catch { return null; }
     })
     .filter(l => l && l.id && l.showId && typeof l.showId === 'string')
+    .filter(l => {
+      if (userId && l.userId) return l.userId === userId;
+      if (email) return (l.email || '').toLowerCase() === email;
+      return false;
+    })
     .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     res.json(lists.map(l => ({ id: l.id, listName: l.listName || l.showName, showName: l.showName, startDate: l.startDate, endDate: l.endDate, riderCount: (l.riderIds || []).length, createdAt: l.createdAt })));
   } catch (err) {

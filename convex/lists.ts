@@ -3,6 +3,7 @@ import { v } from "convex/values";
 
 export const create = mutation({
   args: {
+    userId: v.optional(v.string()),
     showId: v.string(), showName: v.string(), listName: v.optional(v.string()),
     startDate: v.optional(v.string()), endDate: v.optional(v.string()),
     riderIds: v.array(v.number()), selections: v.optional(v.any()),
@@ -16,9 +17,10 @@ export const create = mutation({
 });
 
 export const getAll = query({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("lists").order("desc").collect();
+  args: { userId: v.optional(v.string()) },
+  handler: async (ctx, { userId }) => {
+    const lists = await ctx.db.query("lists").order("desc").collect();
+    return userId ? lists.filter(l => l.userId === userId) : lists;
   }
 });
 

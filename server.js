@@ -1057,7 +1057,7 @@ app.get('/api/lists', async (req, res) => {
       // 2. ALSO show lists with NO userId (migrated/legacy lists).
       const lists = allLists.filter(l => {
         if (ownerId && l.userId === ownerId) return true;
-        if (l.userId === undefined || l.userId === null || l.userId === '') return true;
+        if (!('userId' in l) || l.userId === undefined || l.userId === null || l.userId === '') return true;
         return false;
       });
 

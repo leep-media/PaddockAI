@@ -1038,27 +1038,22 @@ app.post('/api/lists', async (req, res) => {
 app.get('/api/lists', async (req, res) => {
   try {
     const userId = req.query.userId ? String(req.query.userId) : '';
-    const email = req.query.email ? String(req.query.email).toLowerCase() : '';
+    let email = req.query.email ? String(req.query.email).toLowerCase() : '';
 
     // Convex path
     if (getConvex()) {
       let ownerId = userId;
       if (!ownerId && email) {
-        const owner = await getConvex().query(api.users.getByEmail, { email });
+        // Try exact first, then lower (getByEmail handle case based on how it's written in Convex)
+        let owner = await getConvex().query(api.users.getByEmail, { email: req.query.email });
+        if (!owner && email) {
+            owner = await getConvex().query(api.users.getByEmail, { email });
+        }
         if (owner) ownerId = owner._id;
       }
       
-      const allLists = await getConvex().query(api.lists.getAll, {});
+      const lists = await getConvex().query(api.lists.getAll, { userId: ownerId || undefined });
       
-      // Filter logic:
-      // 1. If we have a userId, show lists owned by them.
-      // 2. ALSO show lists with NO userId (migrated/legacy lists).
-      const lists = allLists.filter(l => {
-        if (ownerId && l.userId && l.userId === ownerId) return true;
-        if (!l.userId) return true;
-        return false;
-      });
-
       return res.json(lists.map(l => ({
         id: l._id,
         listName: l.listName || l.showName,

@@ -1050,13 +1050,16 @@ app.get('/api/lists', async (req, res) => {
       
       const allLists = await getConvex().query(api.lists.getAll, {});
       
+      // LOGGING FOR DEBUGGING
+      console.log(`[API] Fetching lists for ownerId: ${ownerId}, email: ${email}. Found ${allLists.length} total.`);
+
       const lists = allLists.filter(l => {
-        // Show if explicitly owned by this user
         if (ownerId && l.userId === ownerId) return true;
-        // Show if no owner (migrated legacy lists)
         if (!l.userId) return true;
         return false;
       });
+
+      console.log(`[API] Returning ${lists.length} lists after filter.`);
 
       return res.json(lists.map(l => ({
         id: l._id,

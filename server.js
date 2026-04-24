@@ -13,10 +13,12 @@ const ADMIN_SESSION_COOKIE = 'paddockai_admin';
 
 // ===== Convex HTTP Client (optional — falls back to JSON files) =====
 let ConvexHttpClient, api;
+let convexInitError = null;
 try {
   ConvexHttpClient = require("convex/browser").ConvexHttpClient;
   api = require("./convex/_generated/api").api;
-} catch {
+} catch (e) {
+  convexInitError = e.message;
   // Convex not generated yet — JSON fallback only
   ConvexHttpClient = null;
   api = null;
@@ -25,7 +27,14 @@ const CONVEX_URL = process.env.CONVEX_URL || 'https://blessed-lemur-987.eu-west-
 let convex = null;
 function getConvex() {
   if (!ConvexHttpClient || !api) return null;
-  if (!convex) convex = new ConvexHttpClient(CONVEX_URL);
+  if (!convex) {
+    try {
+      convex = new ConvexHttpClient(CONVEX_URL);
+    } catch (e) {
+      convexInitError = e.message;
+      return null;
+    }
+  }
   return convex;
 }
 
@@ -1041,6 +1050,9 @@ app.get('/api/debug', (req, res) => {
     res.json({
       hasConvex: !!convex,
       convexUrl: process.env.CONVEX_URL || '(not set)',
+      initError: convexInitError,
+      hasConvexHttpClient: typeof ConvexHttpClient === 'function',
+      hasApi: !!api,
       hasFs: typeof fs === 'object',
       dataDir: DATA_DIR,
       filesInDir: fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'))

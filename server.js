@@ -75,7 +75,6 @@ async function upgradeToPro(email, subscriptionId) {
   // Opdater i Convex hvis tilgængeligt
   const c = getConvex();
   if (c) {
-    const { api } = require('./convex/_generated/api');
     await c.mutation("users:updatePlan", { email, plan: 'pro', subscriptionId: subscriptionId || '' });
   } else {
     // JSON fallback
@@ -88,7 +87,6 @@ async function upgradeToPro(email, subscriptionId) {
 async function downgradeFromPro(subscriptionId) {
   const c = getConvex();
   if (c) {
-    const { api } = require('./convex/_generated/api');
     await c.mutation("users:downgradeBySubscription", { subscriptionId });
   }
 }
@@ -594,7 +592,6 @@ app.get('/admin', requireAdmin, async (req, res) => {
   let users = [];
   const c = getConvex();
   if (c) {
-    const { api } = require('./convex/_generated/api');
     users = await c.query("users:getAll");
   } else {
     users = loadUsers();
@@ -766,7 +763,6 @@ app.post('/admin/downgrade', requireAdmin, express.urlencoded({ extended: false 
   const { email } = req.body;
   const c = getConvex();
   if (c) {
-    const { api } = require('./convex/_generated/api');
     await c.mutation("users:updatePlan", { email, plan: 'free', subscriptionId: '' });
   } else {
     const users = loadUsers();
@@ -1072,8 +1068,6 @@ app.get('/api/debug', (req, res) => {
       hasConvex: !!convex,
       convexUrl: process.env.CONVEX_URL || '(not set)',
       initError: convexInitError,
-      hasConvexHttpClient: typeof ConvexHttpClient === 'function',
-      hasApi: !!api,
       hasFs: typeof fs === 'object',
       dataDir: DATA_DIR,
       filesInDir: fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'))

@@ -1320,14 +1320,14 @@
         let html = `<div class="saved-lists-header"><h3>Dine hold</h3>
           <button class="btn-secondary edit-lists-btn ${editMode ? 'active' : ''}" onclick="toggleEditMode()">Rediger</button></div>`;
         for (const s of lists) {
-          html += `<div class="list-item ${editMode ? 'show-delete' : ''}">
+          html += `<div class="list-item">
             <div style="flex: 1; min-width: 0;">
               <div class="list-link" onclick="viewList('${s.id}')" style="cursor:pointer;">
                 <div class="list-name">${s.listName || s.showName}</div>
                 <div class="list-meta"><span>${s.showName}</span> <span>${s.startDate} – ${s.endDate}</span> <span>${s.riderCount} ryttere</span></div>
               </div>
             </div>
-            ${editMode ? `<div class="list-actions"><button class="btn-delete-list" onclick="deleteList('${s.id}')">✕</button></div>` : ''}
+            <div class="list-actions"><button class="btn-delete-list" onclick="if(confirm('Slet holdet \'' + '${s.listName || s.showName}'.replace(/'/g, '') + '\'?'))deleteList('${s.id}')">✕</button></div>
           </div>`;
         }
         container.innerHTML = html;
@@ -1339,7 +1339,7 @@
       document.querySelectorAll('.list-item').forEach(el => el.classList.toggle('show-delete', editMode));
       document.querySelector('.edit-lists-btn')?.classList.toggle('active', editMode);
     }
-    async function deleteList(id) { await fetch('/api/lists/' + id, { method: 'DELETE' }); loadSavedLists(); }
+    async function deleteList(id) { await fetch('/api/lists/' + id, { method: 'DELETE' }); loadSavedLists(); showToast('Hold slettet'); }
 
     // ===== VIEW LIST (DASHBOARD) =====
     async function viewList(listId) {

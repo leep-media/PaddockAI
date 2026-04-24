@@ -919,8 +919,11 @@
       currentRiders = [];
       riderSelections = {};
       document.getElementById('riders-section').style.display = 'block';
-      document.getElementById('rider-list').innerHTML = '<li class="dd-empty">Tryk på søgefeltet for at hente ryttere</li>';
+      document.getElementById('rider-list').innerHTML = '<li class="dd-empty"><div class="loading">Henter ryttere...</div></li>';
       document.getElementById('riders-loaded').value = '';
+      
+      // Auto-load riders
+      loadRiders(show.id);
     }
 
     function clearShowSelection() {
@@ -951,6 +954,7 @@
         const res = await fetch(`/api/shows/${showId}/riders`);
         currentRiders = await res.json();
         loading.style.display = 'none';
+        document.getElementById('riders-loaded').value = showId;
         renderRiders();
       } catch { loading.textContent = 'Fejl ved indlæsning af ryttere'; }
     }

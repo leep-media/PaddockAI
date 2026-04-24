@@ -305,6 +305,7 @@
             <button class="btn-secondary" onclick="shareRider()" id="share-rider-btn">
               📤 Del <span class="pro-badge">PRO</span>
             </button>
+            <button class="btn-secondary" onclick="toggleQuickAdd()" id="edit-team-btn">✏️ Redigér hold</button>
           </div>
 
           <div id="share-banner" class="share-banner" style="display:none;">
@@ -314,34 +315,20 @@
             </div>
           </div>
 
+          <!-- REDESIGN: Program/Full startlist as primary view -->
+          <div id="list-content"></div>
 
-          <div class="quick-add-section" id="quick-add-section">
-            <h3 style="margin:0 0 8px;">Holdets ryttere</h3>
+          <!-- Quick Add / Edit team moved to optional section -->
+          <div class="quick-add-section" id="quick-add-section" style="display:none; margin-top:20px;">
+            <div class="section-header-row">
+              <h3 style="margin:0;">Holdets ryttere</h3>
+              <button class="btn-secondary btn-small" onclick="toggleQuickAdd()">Luk</button>
+            </div>
             <p class="quick-add-help">Søg og vælg ryttere, heste eller enkelte starter direkte i holdet.</p>
             <input type="search" id="quick-add-search" placeholder="Søg rytter til holdet...">
             <div class="quick-add-results" id="quick-add-results"></div>
             <button class="btn-secondary" id="quick-add-update-btn" onclick="applyQuickAddSelections()" style="display:none; margin-top:10px; width:100%;">Gem ændringer</button>
           </div>
-
-          <div class="pro-upgrade-banner" id="pro-upgrade-banner">
-            <p>Lås op for ubegrænsede hold, push-notifikationer, deling og PDF-eksport</p>
-            <button class="pro-upgrade-btn" onclick="showProModal()">⭐ Opgrader til PRO — 49 kr/måned</button>
-          </div>
-
-          <details class="full-startlist-card" id="full-startlist-card">
-            <summary class="full-startlist-summary">
-              <span class="full-startlist-icon">📋</span>
-              <span class="full-startlist-copy">
-                <span class="full-startlist-title">Fuld startliste</span>
-                <span class="full-startlist-subtitle">Tryk her for at se alle starter i holdet</span>
-              </span>
-              <span class="full-startlist-chevron">⌄</span>
-            </summary>
-            <div id="list-content" class="full-startlist-content"></div>
-          </details>
-
-          <div id="selected-riders-list" style="display:none;"></div>
-        </div>
       </div>
 
       <!-- ===== TAB: MINE HESTE ===== -->
@@ -1737,7 +1724,12 @@
       if (container) container.innerHTML = '';
     }
 
-    async function removeRiderFromList(riderId) {
+    function toggleQuickAdd() {
+      const el = document.getElementById('quick-add-section');
+      const isVisible = el.style.display !== 'none';
+      el.style.display = isVisible ? 'none' : 'block';
+      if (!isVisible) el.scrollIntoView({ behavior: 'smooth' });
+    }
       if (!currentListData || !addRiderSelections[riderId]) return;
       delete addRiderSelections[riderId];
       const search = document.getElementById('quick-add-search');

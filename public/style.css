@@ -595,12 +595,15 @@ input:focus { border-color: rgba(255,255,255,0.2); }
 .nav-icon { font-size: 1.4rem; }
 .nav-label { font-size: 0.75rem; font-weight: 600; }
 
-.app-footer {
-  text-align: center;
-  padding: 40px 20px 120px;
-  color: var(--text3);
-  font-size: 0.8rem;
+.view-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 8px;
 }
+.btn-small { padding: 6px 12px !important; font-size: 0.8rem !important; }
+.section-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 
 /* ═══ SELECTED SHOW CARD ═══ */
 .show-selected-chip { margin: 14px 0 20px; }

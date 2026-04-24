@@ -302,3 +302,110 @@ input:focus { border-color: rgba(255,255,255,0.2); }
   border-radius: 14px; font-weight: 800; font-size: 1rem; margin-top: 16px;
 }
 #create-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+/* ═══ PROGRAM / FULL SCHEDULE DESIGN ═══ */
+.program-shell {
+  background: #1c1c1c;
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  margin-top: 10px;
+}
+.program-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+.ph-date { font-size: 1.3rem; font-weight: 700; color: #fff; }
+.ph-arena { font-size: 0.85rem; color: #888; margin-top: 2px; }
+.ph-meta { font-size: 0.82rem; color: #888; }
+
+.program-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.program-tab {
+  background: #2a2a2a;
+  color: #888;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.program-tab.active {
+  background: #fff;
+  color: #000;
+}
+
+.program-day-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.program-class-card {
+  position: relative;
+  padding-left: 16px;
+}
+.pcc-side-accent {
+  position: absolute;
+  left: 0; top: 4px; bottom: 4px;
+  width: 3px;
+  border-radius: 4px;
+  background: var(--class-color);
+}
+.pcc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.pcc-badge {
+  background: #2a2a2a;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.pcc-time { font-size: 0.82rem; font-weight: 700; color: #fff; }
+.pcc-name { font-size: 0.95rem; font-weight: 500; color: #fff; margin-bottom: 14px; }
+
+.pcc-riders {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pcc-rider-row {
+  display: flex;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: #fff;
+  align-items: baseline;
+}
+.pcc-r-time { color: #888; min-width: 42px; }
+.pcc-r-no { color: #fff; font-weight: 700; }
+.pcc-r-name { color: #fff; font-weight: 700; text-transform: uppercase; }
+.pcc-r-horse { color: #888; text-transform: uppercase; font-size: 0.82rem; }
+
+.program-footer {
+  text-align: center;
+  color: #555;
+  font-size: 0.82rem;
+  margin-top: 30px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.full-startlist-card {
+  margin-top: 16px;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.full-startlist-summary { display: none !important; }

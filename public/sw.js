@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paddockai-v3';
+const CACHE_NAME = 'paddockai-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -43,6 +43,17 @@ self.addEventListener('fetch', (event) => {
           const clone = res.clone();
           caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
           return res;
+        })
+        .catch(() => caches.match(event.request))
+    );
+  } else if (url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname === '') {
+    // HTML: network-first to always show latest content
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
         })
         .catch(() => caches.match(event.request))
     );

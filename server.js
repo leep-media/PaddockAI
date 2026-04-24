@@ -1088,19 +1088,8 @@ app.get('/api/lists', async (req, res) => {
 
     // Convex path
     if (convex) {
-      let ownerId = userId;
-      if (!ownerId && email) {
-        // Try exact first, then lower (getByEmail handle case based on how it's written in Convex)
-        let owner = await convex.query("users:getByEmail", { email: req.query.email });
-        if (!owner && email) {
-            owner = await convex.query("users:getByEmail", { email });
-        }
-        if (owner) ownerId = owner._id;
-      }
-      
       const allLists = await convex.query("lists:getAll", {});
       
-      // Always return ALL in dev for now
       return res.json(allLists.map(l => ({
         id: l._id,
         listName: l.listName || l.showName,
@@ -1108,8 +1097,7 @@ app.get('/api/lists', async (req, res) => {
         startDate: l.startDate,
         endDate: l.endDate,
         riderCount: (l.riderIds || []).length,
-        createdAt: l.createdAt,
-        _debug: { userId: l.userId, hasUserId: !!l.userId }
+        createdAt: l.createdAt
       })));
     }
 

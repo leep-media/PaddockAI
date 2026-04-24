@@ -1503,8 +1503,6 @@
 
     function renderFullSchedule(sched) {
       const content = document.getElementById('list-content');
-      let html = `<h2 style="margin-top:12px;">${sched.showName}</h2>`;
-      html += `<p style="color:#888; margin-bottom:16px; font-size:0.85rem;">${sched.startDate} – ${sched.endDate}</p>`;
       const dates = Object.keys(sched.schedule).sort();
       if (!dates.length) { content.innerHTML = '<p style="color:#888;">Ingen klasser fundet.</p>'; return; }
 
@@ -1518,28 +1516,89 @@
         return currentDiff < bestDiff ? date : best;
       }, dates[0]);
 
+      let html = `<div class="program-shell">`;
+      
+      // Header Info
+      html += `<div class="program-header">
+        <div class="program-header-main">
+          <div class="ph-date">${formatDate(nearestDate)}</div>
+          <div class="ph-arena">Arena · ${sched.showName}</div>
+        </div>
+        <div class="ph-meta">${sched.riderIds?.length || 0} starter</div>
+      </div>`;
+
+      // Date Tabs
+      html += `<div class="program-tabs">`;
       for (const date of dates) {
-        const dayId = 'day-' + date;
-        const isOpen = date === nearestDate;
-        html += `<div class="day-header" onclick="toggleDay('${dayId}')"><span>${formatDate(date)}</span><span class="toggle" id="toggle-${dayId}">${isOpen ? '▼' : '▶'}</span></div>`;
-        html += `<div class="day-content${isOpen ? '' : ' collapsed'}" id="${dayId}">`;
-        for (const cls of sched.schedule[date]) {
-          const time = formatTime(cls.time);
-          const csId = cls.classSectionId || '';
-          const arenaLabel = formatArena(cls.arena);
-          const equipeUrl = csId ? `https://online.equipe.com/startlists/${csId}` : '#';
-          html += `<div class="class-entry">`;
-          html += `<div class="class-time"><a href="${equipeUrl}" target="_blank">Kl. ${time} / ${cls.classNo ? 'Klasse ' + cls.classNo + ' - ' : ''}${cls.className}</a>${arenaLabel ? `<span class="arena-badge">${arenaLabel}</span>` : ''}</div>`;
-          for (const r of cls.riders) {
-            const rTime = r.startAt ? ` kl. ${r.startAt.match(/(\d{2}):(\d{2})/)?.[0].replace(':','.')}` : '';
-            html += `<div class="rider-entry"><span>Nr. ${r.startNo || '?'}${rTime} - ${r.riderName} / ${r.horseName}</span></div>`;
-          }
-          html += `</div>`;
-        }
-        html += `</div>`;
+        const isActive = date === nearestDate;
+        const d = new Date(date);
+        const label = date === new Date().toLocaleDateString('sv-SE') ? 'I dag' : 
+                      d.toLocaleDateString('da-DK', {weekday: 'short', day: 'numeric'}).replace('.', '');
+        html += `<button class="program-tab ${isActive ? 'active' : ''}" onclick="switchProgramDay('${date}')">${label}</button>`;
       }
+      html += `</div>`;
+
+      // Classes for the selected day
+      html += `<div id="program-day-content" class="program-day-content">`;
+      html += renderDayClasses(sched.schedule[nearestDate]);
+      html += `</div>`;
+
+      html += `<div class="program-footer">Dagens program</div>`;
+      html += `</div>`;
+      
       content.innerHTML = html;
+      // Store full schedule for tab switching
+      window.currentFullSchedule = sched;
     }
+
+    function renderDayClasses(classes) {
+      if (!classes) return '';
+      let html = '';
+      const colors = ['#68c18b', '#9f9cff', '#ff9e7a', '#ff9cff', '#7be9ff'];
+      classes.forEach((cls, idx) => {
+        const color = colors[idx % colors.length];
+        const time = formatTime(cls.time);
+        const classLabel = (cls.classNo ? 'Klasse ' + cls.classNo : 'Klasse') + (cls.className.toLowerCase().includes('pony') ? ' · Pony' : '');
+        
+        html += `<div class="program-class-card" style="--class-color: ${color}">
+          <div class="pcc-side-accent"></div>
+          <div class="pcc-head">
+            <div class="pcc-badge">${classLabel}</div>
+            <div class="pcc-time">Kl. ${time}</div>
+          </div>
+          <div class="pcc-name">${cls.className}</div>
+          <div class="pcc-riders">`;
+        
+        for (const r of cls.riders) {
+          const rTime = r.startAt ? r.startAt.match(/(\d{2}):(\d{2})/)?.[0].replace(':','.') : '--.--';
+          html += `<div class="pcc-rider-row">
+            <span class="pcc-r-time">${rTime}</span>
+            <span class="pcc-r-no">Nr. ${r.startNo || '?'} ·</span>
+            <span class="pcc-r-name">${r.riderName}</span>
+            <span class="pcc-r-horse">${r.horseName}</span>
+          </div>`;
+        }
+        
+        html += `</div></div>`;
+      });
+      return html;
+    }
+
+    window.switchProgramDay = function(date) {
+      const content = document.getElementById('program-day-content');
+      if (!content || !window.currentFullSchedule) return;
+      
+      // Update tabs
+      document.querySelectorAll('.program-tab').forEach(t => {
+        t.classList.toggle('active', t.getAttribute('onclick').includes(date));
+      });
+      
+      // Update header date (optional but nice)
+      const dateEl = document.querySelector('.ph-date');
+      if (dateEl) dateEl.textContent = formatDate(date);
+
+      content.innerHTML = renderDayClasses(window.currentFullSchedule.schedule[date]);
+    };
 
     function toggleDay(dayId) {
       const el = document.getElementById(dayId);

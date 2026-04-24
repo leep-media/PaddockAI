@@ -443,7 +443,17 @@ input:focus { border-color: rgba(255,255,255,0.2); }
 .dd-meta { font-size: 0.8rem; color: #888; margin-top: 2px; }
 .dd-empty { padding: 20px; text-align: center; color: #555; }
 
-.rider-list { list-style: none; margin-top: 16px; padding: 0; }
+.rider-list {
+  list-style: none;
+  margin-top: 16px;
+  padding: 0;
+  max-height: 480px;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.15);
+  border: 1px solid var(--border);
+  padding: 8px;
+}
 .rider-tree-item {
   background: rgba(255,255,255,0.03);
   border-radius: 12px;

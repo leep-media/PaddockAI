@@ -1327,7 +1327,7 @@
                 <div class="list-meta"><span>${s.showName}</span> <span>${s.startDate} – ${s.endDate}</span> <span>${s.riderCount} ryttere</span></div>
               </div>
             </div>
-            <div class="list-actions"><button class="btn-delete-list" onclick="if(confirm('Slet holdet \'' + '${s.listName || s.showName}'.replace(/'/g, '') + '\'?'))deleteList('${s.id}')">✕</button></div>
+            <div class="list-actions"><button class="btn-delete-list" onclick="event.stopPropagation();deleteList('${s.id}')">✕</button></div>
           </div>`;
         }
         container.innerHTML = html;

@@ -1064,7 +1064,7 @@
       return ['Søn','Man','Tir','Ons','Tor','Fre','Lør'][d.getDay()];
     }
 
-    function renderRiderItemHTML(r) {
+        function renderRiderItemHTML(r) {
       const horses = getRiderHorses(r);
       const horseNames = Object.keys(horses);
       const needsTree = horseNames.length > 1 || horseNames.some(h => horses[h].length > 1);
@@ -1085,8 +1085,9 @@
         metaText = `🐴 ${horseName}${className ? ' · ' + day + ' ' + time + ' ' + className : ''}`;
       }
       let html = `<div class="rider-tree-row" data-action="toggle-rider" data-rider-id="${r.id}">
-        <input type="checkbox" ${rFull ? 'checked' : ''} data-check="rider" data-rider-id="${r.id}">
-        ${rPartial ? '<span class="partial-indicator"></span>' : ''}
+        <div class="custom-checkbox ${rFull ? 'checked' : (rPartial ? 'partial' : '')}" data-check="rider" data-rider-id="${r.id}">
+          ${rFull ? '✓' : (rPartial ? '—' : '')}
+        </div>
         <span class="tree-label">${escAttr(r.name)}<span class="club">${escAttr(r.club || '')}</span>${metaText ? '<span class="tree-meta">' + metaText + '</span>' : ''}</span>
         ${needsTree ? `<span class="rider-tree-toggle ${rExpanded ? 'open' : ''}">▶</span>` : ''}
       </div>`;
@@ -1101,8 +1102,9 @@
           const hExpanded = expandedHorses.has(hKey);
           const hasMulti = hEntries.length > 1;
           html += `<div class="rider-tree-row" data-action="toggle-horse" data-rider-id="${r.id}" data-horse="${escAttr(horseName)}">
-            <input type="checkbox" ${hFull ? 'checked' : ''} data-check="horse" data-rider-id="${r.id}" data-horse="${escAttr(horseName)}">
-            ${hPartial ? '<span class="partial-indicator"></span>' : ''}
+            <div class="custom-checkbox ${hFull ? 'checked' : (hPartial ? 'partial' : '')}" data-check="horse" data-rider-id="${r.id}" data-horse="${escAttr(horseName)}">
+              ${hFull ? '✓' : (hPartial ? '—' : '')}
+            </div>
             <span class="tree-label tree-horse-label">🐴 ${escAttr(horseName)}${hasMulti ? ' <span style="color:var(--text3)">(' + hEntries.length + ' klasser)</span>' : ' <span style="color:var(--text3)"> · ' + formatEntryDate(hEntries[0]) + ' ' + formatEntryTime(hEntries[0]) + ' ' + (hEntries[0].classNo ? 'Kl. ' + hEntries[0].classNo + ' - ' : '') + escAttr(hEntries[0].className) + '</span>'}</span>
             ${hasMulti ? `<span class="rider-tree-toggle ${hExpanded ? 'open' : ''}">▶</span>` : ''}
           </div>`;
@@ -1112,7 +1114,9 @@
               const entryKey = getEntrySelectionKey(e);
               const cSel = isClassSelected(r.id, horseName, entryKey);
               html += `<div class="rider-tree-row">
-                <input type="checkbox" ${cSel ? 'checked' : ''} data-check="class" data-rider-id="${r.id}" data-horse="${escAttr(horseName)}" data-entry-key="${escAttr(entryKey)}">
+                <div class="custom-checkbox ${cSel ? 'checked' : ''}" data-check="class" data-rider-id="${r.id}" data-horse="${escAttr(horseName)}" data-entry-key="${escAttr(entryKey)}">
+                  ${cSel ? '✓' : ''}
+                </div>
                 <span class="tree-label tree-class-label"><span class="tree-class-time">${formatEntryDate(e)} ${formatEntryTime(e)}</span> ${e.classNo ? 'Kl. ' + e.classNo + ' - ' : ''}${escAttr(e.className)}</span>
               </div>`;
             }

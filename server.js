@@ -1040,42 +1040,32 @@ app.get('/api/lists', async (req, res) => {
     const userId = req.query.userId ? String(req.query.userId) : '';
     let email = req.query.email ? String(req.query.email).toLowerCase() : '';
 
+    const convex = getConvex();
+
     // Convex path
-    if (getConvex()) {
+    if (convex) {
       let ownerId = userId;
       if (!ownerId && email) {
         // Try exact first, then lower (getByEmail handle case based on how it's written in Convex)
-        let owner = await getConvex().query(api.users.getByEmail, { email: req.query.email });
+        let owner = await convex.query(api.users.getByEmail, { email: req.query.email });
         if (!owner && email) {
-            owner = await getConvex().query(api.users.getByEmail, { email });
+            owner = await convex.query(api.users.getByEmail, { email });
         }
         if (owner) ownerId = owner._id;
       }
       
-      const lists = await getConvex().query(api.lists.getAll, { userId: ownerId || undefined });
+      const allLists = await convex.query(api.lists.getAll, {});
       
-      if (!lists || !lists.length) {
-        // Fallback: if no ownerId found or no lists for owner, return ALL as a safety measure for now
-        const all = await getConvex().query(api.lists.getAll, {});
-        return res.json(all.map(l => ({
-          id: l._id,
-          listName: l.listName || l.showName,
-          showName: l.showName,
-          startDate: l.startDate,
-          endDate: l.endDate,
-          riderCount: (l.riderIds || []).length,
-          createdAt: l.createdAt
-        })));
-      }
-
-      return res.json(lists.map(l => ({
+      // Always return ALL in dev for now
+      return res.json(allLists.map(l => ({
         id: l._id,
         listName: l.listName || l.showName,
         showName: l.showName,
         startDate: l.startDate,
         endDate: l.endDate,
         riderCount: (l.riderIds || []).length,
-        createdAt: l.createdAt
+        createdAt: l.createdAt,
+        _debug: { userId: l.userId, hasUserId: !!l.userId }
       })));
     }
 

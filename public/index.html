@@ -1730,6 +1730,7 @@
       el.style.display = isVisible ? 'none' : 'block';
       if (!isVisible) el.scrollIntoView({ behavior: 'smooth' });
     }
+    function removeQuickAddRider(riderId) {
       if (!currentListData || !addRiderSelections[riderId]) return;
       delete addRiderSelections[riderId];
       const search = document.getElementById('quick-add-search');

@@ -1048,12 +1048,13 @@ app.get('/api/lists', async (req, res) => {
         ownerId = owner?._id || '';
       }
       
-      // Fetch all to verify logic
       const allLists = await getConvex().query(api.lists.getAll, {});
       
-      let lists = allLists.filter(l => {
+      // Filter logic:
+      // 1. If we have a userId, show lists owned by them.
+      // 2. ALSO show lists with NO userId (migrated/legacy lists).
+      const lists = allLists.filter(l => {
         if (ownerId && l.userId === ownerId) return true;
-        // Fallback for migrated lists (no userId yet)
         if (!l.userId) return true;
         return false;
       });

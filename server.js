@@ -1047,7 +1047,11 @@ app.get('/api/lists', async (req, res) => {
         const owner = await getConvex().query(api.users.getByEmail, { email });
         ownerId = owner?._id || '';
       }
-      const lists = await getConvex().query(api.lists.getAll, { userId: ownerId || undefined });
+      let lists = await getConvex().query(api.lists.getAll, { userId: ownerId || undefined });
+      if ((!lists || !lists.length) && ownerId) {
+        const allLists = await getConvex().query(api.lists.getAll, {});
+        lists = allLists.filter(l => !l.userId);
+      }
       return res.json(lists.map(l => ({
         id: l._id,
         listName: l.listName || l.showName,

@@ -18,7 +18,7 @@ export default defineSchema({
 
   lists: defineTable({
     userId: v.optional(v.string()),
-    showId: v.string(),
+    showId: v.number(),
     showName: v.string(),
     listName: v.optional(v.string()),
     startDate: v.optional(v.string()),

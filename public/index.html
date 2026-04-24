@@ -168,16 +168,17 @@
 
         <!-- Sub-page: Create/List -->
         <div id="sp-page-create" class="showplaner-page">
-          <section class="showplaner-hero">
-            <div class="showplaner-hero-copy">
+          <section class="saved-lists-section">
+            <div id="saved-lists"></div>
+          </section>
+
+          <section class="showplaner-builder-card">
+            <div class="showplaner-hero-copy compact">
               <span class="showplaner-kicker">🏆 Showplaner</span>
               <h2 class="tab-title">Dit stævneoverblik starter her</h2>
               <p class="tab-desc">Vælg stævne, markér ryttere og opret dit hold uden unødige trin.</p>
             </div>
-            <div class="showplaner-hero-glow"></div>
-          </section>
 
-          <section class="showplaner-builder-card">
             <div class="builder-section-head">
               <span class="builder-step">01</span>
               <div>
@@ -231,10 +232,6 @@
             <span class="plan-info-text">Gratis plan: maks 3 ryttere per liste · 3 lister totalt</span>
             <button class="btn-upgrade-small" onclick="showProModal()">⭐ PRO</button>
           </div>
-
-          <section class="saved-lists-section">
-            <div id="saved-lists"></div>
-          </section>
         </div>
 
         <!-- Sub-page: View/Dashboard -->
@@ -255,7 +252,7 @@
           </div>
 
           <div class="next-up-box" id="next-up-box" style="display:none;">
-            <div id="sync-indicator" class="sync-indicator" style="display:none;">Live synkronisering aktiv</div>
+            <div id="sync-indicator" class="sync-indicator" style="display:none;">Live</div>
             <div class="next-up-label">Næste start</div>
             <div class="next-up-rider" id="next-up-rider"></div>
             <div class="next-up-horse" id="next-up-horse"></div>

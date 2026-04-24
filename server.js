@@ -11,31 +11,52 @@ const ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'paddockai2026';
 const ADMIN_SESSION_COOKIE = 'paddockai_admin';
 
-// ===== Convex HTTP Client (optional — falls back to JSON files) =====
-let ConvexHttpClient, api;
+// ===== Convex HTTP Client (Direct fetch — dropped broken ESM library) =====
 let convexInitError = null;
-try {
-  ConvexHttpClient = require("convex/browser").ConvexHttpClient;
-  api = require("./convex/_generated/api").api;
-} catch (e) {
-  convexInitError = e.message;
-  // Convex not generated yet — JSON fallback only
-  ConvexHttpClient = null;
-  api = null;
-}
 const CONVEX_URL = process.env.CONVEX_URL || 'https://blessed-lemur-987.eu-west-1.convex.cloud';
-let convex = null;
-function getConvex() {
-  if (!ConvexHttpClient || !api) return null;
-  if (!convex) {
-    try {
-      convex = new ConvexHttpClient(CONVEX_URL);
-    } catch (e) {
-      convexInitError = e.message;
+
+async function convexQuery(path, args = {}) {
+  if (!CONVEX_URL) { convexInitError = 'No CONVEX_URL'; return null; }
+  try {
+    const resp = await fetch(`${CONVEX_URL}/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, args })
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      convexInitError = `HTTP ${resp.status}: ${text.substring(0,200)}`;
       return null;
     }
+    return await resp.json();
+  } catch (e) {
+    convexInitError = `convexQuery error: ${e.message}`;
+    return null;
   }
-  return convex;
+}
+
+async function convexMutation(path, args = {}) {
+  if (!CONVEX_URL) { convexInitError = 'No CONVEX_URL'; return null; }
+  try {
+    const resp = await fetch(`${CONVEX_URL}/mutation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, args })
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      convexInitError = `HTTP ${resp.status}: ${text.substring(0,200)}`;
+      return null;
+    }
+    return await resp.json();
+  } catch (e) {
+    convexInitError = `convexMutation error: ${e.message}`;
+    return null;
+  }
+}
+
+function getConvex() {
+  return CONVEX_URL ? { query: convexQuery, mutation: convexMutation } : null;
 }
 
 function execFileAsync(cmd, args, opts = {}) {
@@ -55,7 +76,7 @@ async function upgradeToPro(email, subscriptionId) {
   const c = getConvex();
   if (c) {
     const { api } = require('./convex/_generated/api');
-    await c.mutation(api.users.updatePlan, { email, plan: 'pro', subscriptionId: subscriptionId || '' });
+    await c.mutation("users:updatePlan", { email, plan: 'pro', subscriptionId: subscriptionId || '' });
   } else {
     // JSON fallback
     const users = loadUsers();
@@ -68,7 +89,7 @@ async function downgradeFromPro(subscriptionId) {
   const c = getConvex();
   if (c) {
     const { api } = require('./convex/_generated/api');
-    await c.mutation(api.users.downgradeBySubscription, { subscriptionId });
+    await c.mutation("users:downgradeBySubscription", { subscriptionId });
   }
 }
 
@@ -233,7 +254,7 @@ async function upsertUserFromProviderProfile(profile, provider) {
   if (!email) throw new Error(`${provider} login kræver en email`);
 
   if (getConvex()) {
-    const user = await getConvex().mutation(api.users.upsert, {
+    const user = await getConvex().mutation("users:upsert", {
       name: profile.name || profile.given_name || email.split('@')[0],
       email,
       avatarData: profile.picture || profile.avatarUrl || undefined,
@@ -257,7 +278,7 @@ app.post('/api/users', async (req, res) => {
 
     // Convex path (note: Convex doesn't have passwordHash logic yet, falling back to JSON for this feature)
     if (getConvex() && !passwordHash) {
-      const user = await getConvex().mutation(api.users.upsert, { name, email });
+      const user = await getConvex().mutation("users:upsert", { name, email });
       return res.json(user);
     }
 
@@ -440,7 +461,7 @@ app.get('/api/users/:email', async (req, res) => {
   try {
     // Convex path
     if (getConvex()) {
-      const user = await getConvex().query(api.users.getByEmail, { email: req.params.email });
+      const user = await getConvex().query("users:getByEmail", { email: req.params.email });
       if (!user) return res.status(404).json({ error: 'Bruger ikke fundet' });
       return res.json(user);
     }
@@ -463,7 +484,7 @@ app.patch('/api/users/:email', async (req, res) => {
   try {
     // Convex path
     if (getConvex()) {
-      const user = await getConvex().mutation(api.users.updatePlan, {
+      const user = await getConvex().mutation("users:updatePlan", {
         email: req.params.email,
         plan: req.body.plan || 'free'
       });
@@ -574,7 +595,7 @@ app.get('/admin', requireAdmin, async (req, res) => {
   const c = getConvex();
   if (c) {
     const { api } = require('./convex/_generated/api');
-    users = await c.query(api.users.getAll);
+    users = await c.query("users:getAll");
   } else {
     users = loadUsers();
   }
@@ -746,7 +767,7 @@ app.post('/admin/downgrade', requireAdmin, express.urlencoded({ extended: false 
   const c = getConvex();
   if (c) {
     const { api } = require('./convex/_generated/api');
-    await c.mutation(api.users.updatePlan, { email, plan: 'free', subscriptionId: '' });
+    await c.mutation("users:updatePlan", { email, plan: 'free', subscriptionId: '' });
   } else {
     const users = loadUsers();
     const u = users.find(u => u.email === email.toLowerCase());
@@ -1006,10 +1027,10 @@ app.post('/api/lists', async (req, res) => {
     if (getConvex()) {
       let ownerId = userId;
       if (!ownerId && email) {
-        const owner = await getConvex().query(api.users.getByEmail, { email });
+        const owner = await getConvex().query("users:getByEmail", { email });
         ownerId = owner?._id;
       }
-      const list = await getConvex().mutation(api.lists.create, {
+      const list = await getConvex().mutation("lists:create", {
         userId: ownerId,
         showId, showName,
         listName: listName || showName,
@@ -1074,14 +1095,14 @@ app.get('/api/lists', async (req, res) => {
       let ownerId = userId;
       if (!ownerId && email) {
         // Try exact first, then lower (getByEmail handle case based on how it's written in Convex)
-        let owner = await convex.query(api.users.getByEmail, { email: req.query.email });
+        let owner = await convex.query("users:getByEmail", { email: req.query.email });
         if (!owner && email) {
-            owner = await convex.query(api.users.getByEmail, { email });
+            owner = await convex.query("users:getByEmail", { email });
         }
         if (owner) ownerId = owner._id;
       }
       
-      const allLists = await convex.query(api.lists.getAll, {});
+      const allLists = await convex.query("lists:getAll", {});
       
       // Always return ALL in dev for now
       return res.json(allLists.map(l => ({
@@ -1125,7 +1146,7 @@ app.patch('/api/lists/:id', async (req, res) => {
   try {
     // Convex path
     if (getConvex()) {
-      const list = await getConvex().mutation(api.lists.rename, {
+      const list = await getConvex().mutation("lists:rename", {
         id: req.params.id,
         listName: req.body.listName || ''
       });
@@ -1149,7 +1170,7 @@ app.delete('/api/lists/:id', async (req, res) => {
   try {
     // Convex path
     if (getConvex()) {
-      await getConvex().mutation(api.lists.remove, { id: req.params.id });
+      await getConvex().mutation("lists:remove", { id: req.params.id });
       return res.json({ ok: true });
     }
 
@@ -1168,7 +1189,7 @@ app.get('/api/lists/:id', async (req, res) => {
   try {
     // Convex path
     if (getConvex()) {
-      const list = await getConvex().query(api.lists.getById, { id: req.params.id });
+      const list = await getConvex().query("lists:getById", { id: req.params.id });
       if (!list) return res.status(404).json({ error: 'List not found' });
       return res.json({ ...list, id: list._id });
     }
@@ -1191,7 +1212,7 @@ app.put('/api/lists/:id/riders', async (req, res) => {
 
     // Convex path
     if (getConvex()) {
-      const list = await getConvex().mutation(api.lists.updateRiders, {
+      const list = await getConvex().mutation("lists:updateRiders", {
         id: req.params.id,
         riderIds,
         selections: selections !== undefined ? selections : undefined,
@@ -1220,13 +1241,13 @@ app.post('/api/lists/:id/share', async (req, res) => {
     // Convex path
     if (getConvex()) {
       // Check if list already has a share token
-      const existing = await getConvex().query(api.lists.getById, { id: req.params.id });
+      const existing = await getConvex().query("lists:getById", { id: req.params.id });
       if (!existing) return res.status(404).json({ error: 'List not found' });
       if (existing.shareToken) {
         return res.json({ shareToken: existing.shareToken, listId: existing._id });
       }
       const token = crypto.randomBytes(6).toString('base64url');
-      const list = await getConvex().mutation(api.lists.addShareToken, { id: req.params.id, token });
+      const list = await getConvex().mutation("lists:addShareToken", { id: req.params.id, token });
       return res.json({ shareToken: list.shareToken, listId: list._id });
     }
 
@@ -1249,7 +1270,7 @@ app.get('/api/shared/:token', async (req, res) => {
   try {
     // Convex path
     if (getConvex()) {
-      const list = await getConvex().query(api.lists.getByShareToken, { token: req.params.token });
+      const list = await getConvex().query("lists:getByShareToken", { token: req.params.token });
       if (!list) return res.status(404).json({ error: 'Delt liste ikke fundet' });
       return res.json({ listId: list._id });
     }
@@ -1297,7 +1318,7 @@ app.get('/api/lists/:id/schedule', async (req, res) => {
   try {
     let list;
     if (getConvex()) {
-      list = await getConvex().query(api.lists.getById, { id: req.params.id });
+      list = await getConvex().query("lists:getById", { id: req.params.id });
       if (!list) return res.status(404).json({ error: 'List not found' });
       list.id = list._id; // normalize
     } else {

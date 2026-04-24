@@ -6,6 +6,7 @@ export default defineSchema({
     name: v.string(),
     email: v.string(),
     plan: v.string(), // "free" | "pro"
+    passwordHash: v.optional(v.string()),
     avatarData: v.optional(v.string()),
     googleId: v.optional(v.string()),
     facebookId: v.optional(v.string()),

@@ -276,9 +276,38 @@ app.post('/api/users', async (req, res) => {
     if (!email) return res.status(400).json({ error: 'Email er påkrævet' });
     if (!login && !name) return res.status(400).json({ error: 'Navn er påkrævet ved oprettelse' });
 
-    // Convex path (note: Convex doesn't have passwordHash logic yet, falling back to JSON for this feature)
-    if (getConvex() && !passwordHash) {
-      const user = await getConvex().mutation("users:upsert", { name, email });
+    // Convex path — always use Convex if available
+    if (getConvex()) {
+      if (login && passwordHash) {
+        // Email/password login: lookup user, verify password
+        const existing = await getConvex().query("users:getByEmail", { email });
+        if (!existing) return res.status(404).json({ error: 'Bruger ikke fundet' });
+        
+        // Validate password (stored as simple hash — replace with bcrypt later if needed)
+        if (existing.passwordHash && existing.passwordHash !== passwordHash) {
+          return res.status(401).json({ error: 'Forkert password' });
+        }
+        
+        // First-time password set for existing user
+        if (!existing.passwordHash && passwordHash) {
+          existing.passwordHash = passwordHash;
+          await getConvex().mutation("users:upsert", {
+            name: existing.name,
+            email,
+            passwordHash
+          });
+        }
+        
+        return res.json(existing);
+      }
+      
+      // Social login or registration (no password check needed)
+      const user = await getConvex().mutation("users:upsert", {
+        name: name || email.split('@')[0],
+        email,
+        passwordHash: passwordHash || undefined
+      });
+      if (!user) return res.status(500).json({ error: 'Kunne ikke oprette/finde bruger' });
       return res.json(user);
     }
 

@@ -5,13 +5,14 @@ export const upsert = mutation({
   args: {
     name: v.string(),
     email: v.string(),
+    passwordHash: v.optional(v.string()),
     avatarData: v.optional(v.string()),
     googleId: v.optional(v.string()),
     facebookId: v.optional(v.string()),
     appleId: v.optional(v.string()),
     authProvider: v.optional(v.string()),
   },
-  handler: async (ctx, { name, email, avatarData, googleId, facebookId, appleId, authProvider }) => {
+  handler: async (ctx, { name, email, passwordHash, avatarData, googleId, facebookId, appleId, authProvider }) => {
     const existing = await ctx.db
       .query("users")
       .withIndex("by_email", q => q.eq("email", email.toLowerCase()))
@@ -19,6 +20,7 @@ export const upsert = mutation({
     if (existing) {
       const patch: Record<string, string> = {};
       if (existing.name !== name) patch.name = name;
+      if (passwordHash && existing.passwordHash !== passwordHash) patch.passwordHash = passwordHash;
       if (avatarData && existing.avatarData !== avatarData) patch.avatarData = avatarData;
       if (googleId && existing.googleId !== googleId) patch.googleId = googleId;
       if (facebookId && existing.facebookId !== facebookId) patch.facebookId = facebookId;
@@ -31,6 +33,7 @@ export const upsert = mutation({
       name,
       email: email.toLowerCase(),
       plan: "free",
+      passwordHash,
       avatarData,
       googleId,
       facebookId,

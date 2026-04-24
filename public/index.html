@@ -226,9 +226,8 @@
             </div>
           </div>
 
-          <div id="sync-indicator" class="sync-indicator" style="display:none;">🟢 Live synkronisering aktiv</div>
-
           <div class="next-up-box" id="next-up-box" style="display:none;">
+            <div id="sync-indicator" class="sync-indicator" style="display:none;">Live synkronisering aktiv</div>
             <div class="next-up-label">Næste start</div>
             <div class="next-up-rider" id="next-up-rider"></div>
             <div class="next-up-horse" id="next-up-horse"></div>
@@ -240,26 +239,31 @@
           <div class="rider-timeline" id="rider-timeline"></div>
 
           <div class="quick-add-section" id="quick-add-section">
-            <h3 style="margin:0 0 8px;">Tilføj rytter</h3>
+            <h3 style="margin:0 0 8px;">Holdets ryttere</h3>
+            <p class="quick-add-help">Søg og vælg ryttere, heste eller enkelte starter direkte i holdet.</p>
             <input type="search" id="quick-add-search" placeholder="Søg rytter til holdet...">
             <div class="quick-add-results" id="quick-add-results"></div>
-            <button class="btn-secondary" id="quick-add-update-btn" onclick="applyQuickAddSelections()" style="display:none; margin-top:10px; width:100%;">Tilføj valgte ryttere</button>
+            <button class="btn-secondary" id="quick-add-update-btn" onclick="applyQuickAddSelections()" style="display:none; margin-top:10px; width:100%;">Gem ændringer</button>
           </div>
 
-          <div class="pro-upgrade-banner">
+          <div class="pro-upgrade-banner" id="pro-upgrade-banner">
             <p>Lås op for ubegrænsede hold, push-notifikationer, deling og PDF-eksport</p>
             <button class="pro-upgrade-btn" onclick="showProModal()">⭐ Opgrader til PRO — 49 kr/måned</button>
           </div>
 
-          <details style="margin-top:16px;">
-            <summary style="color:var(--text2); cursor:pointer; font-size:0.85rem; padding:8px 0;">📋 Vis fuld startliste</summary>
-            <div id="list-content"></div>
+          <details class="full-startlist-card" id="full-startlist-card">
+            <summary class="full-startlist-summary">
+              <span class="full-startlist-icon">📋</span>
+              <span class="full-startlist-copy">
+                <span class="full-startlist-title">Fuld startliste</span>
+                <span class="full-startlist-subtitle">Tryk her for at se alle starter i holdet</span>
+              </span>
+              <span class="full-startlist-chevron">⌄</span>
+            </summary>
+            <div id="list-content" class="full-startlist-content"></div>
           </details>
 
-          <div style="margin-top:16px; border-top: 1px solid var(--border); padding-top:16px;">
-            <h3>Holdets ryttere</h3>
-            <div id="selected-riders-list"></div>
-          </div>
+          <div id="selected-riders-list" style="display:none;"></div>
         </div>
       </div>
 
@@ -315,7 +319,7 @@
             </div>
           </div>
 
-          <div class="profile-section">
+          <div class="profile-section" id="profile-pro-section">
             <h3>PRO Plan</h3>
             <div class="pro-features-list">
               <div class="pro-feature-item">✓ Ubegrænsede ryttere per liste</div>
@@ -644,6 +648,19 @@
       }
     }
 
+    function updateProUI() {
+      const isPro = currentUser?.plan === 'pro';
+      const planInfoCard = document.getElementById('plan-info-card');
+      const proUpgradeBanner = document.getElementById('pro-upgrade-banner');
+      const profileProSection = document.getElementById('profile-pro-section');
+      const shareRiderBtn = document.getElementById('share-rider-btn');
+
+      if (planInfoCard) planInfoCard.style.display = isPro ? 'none' : '';
+      if (proUpgradeBanner) proUpgradeBanner.style.display = isPro ? 'none' : '';
+      if (profileProSection) profileProSection.style.display = isPro ? 'none' : '';
+      if (shareRiderBtn) shareRiderBtn.innerHTML = isPro ? '📤 Del' : '📤 Del <span class="pro-badge">PRO</span>';
+    }
+
     function updateProfilePage() {
       if (!currentUser) return;
       const avatarEl = document.getElementById('profile-avatar-large');
@@ -662,6 +679,7 @@
       badge.textContent = isPro ? 'PRO' : 'GRATIS';
       badge.className = 'profile-plan-badge' + (isPro ? ' pro' : '');
       document.getElementById('profile-plan-text').textContent = isPro ? 'PRO (49 kr/md)' : 'Gratis';
+      updateProUI();
 
       if (currentUser.createdAt) {
         const d = new Date(currentUser.createdAt);
@@ -1328,7 +1346,7 @@
       let html = '';
       for (const e of nextThreeEntries) {
         const timeStr = e.startTime ? `${String(e.startTime.getHours()).padStart(2,'0')}.${String(e.startTime.getMinutes()).padStart(2,'0')}` : '—';
-        let status = '⏳', statusClass = '';
+        let status = '', statusClass = '';
         if (e.startTime) {
           const diff = (e.startTime - now) / 60000;
           if (diff < -10) { status = '✅'; statusClass = 'status-done'; }
@@ -1402,12 +1420,22 @@
       html += `<p style="color:#888; margin-bottom:16px; font-size:0.85rem;">${sched.startDate} – ${sched.endDate}</p>`;
       const dates = Object.keys(sched.schedule).sort();
       if (!dates.length) { content.innerHTML = '<p style="color:#888;">Ingen klasser fundet.</p>'; return; }
-      const todayStr = new Date().toLocaleDateString('sv-SE');
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const nearestDate = dates.reduce((best, date) => {
+        const current = new Date(`${date}T00:00:00`);
+        const bestDate = new Date(`${best}T00:00:00`);
+        const currentDiff = Math.abs(current - today);
+        const bestDiff = Math.abs(bestDate - today);
+        return currentDiff < bestDiff ? date : best;
+      }, dates[0]);
+
       for (const date of dates) {
         const dayId = 'day-' + date;
-        const isPast = date < todayStr;
-        html += `<div class="day-header" onclick="toggleDay('${dayId}')"><span>${formatDate(date)}</span><span class="toggle" id="toggle-${dayId}">${isPast ? '▶' : '▼'}</span></div>`;
-        html += `<div class="day-content${isPast ? ' collapsed' : ''}" id="${dayId}">`;
+        const isOpen = date === nearestDate;
+        html += `<div class="day-header" onclick="toggleDay('${dayId}')"><span>${formatDate(date)}</span><span class="toggle" id="toggle-${dayId}">${isOpen ? '▼' : '▶'}</span></div>`;
+        html += `<div class="day-content${isOpen ? '' : ' collapsed'}" id="${dayId}">`;
         for (const cls of sched.schedule[date]) {
           const time = formatTime(cls.time);
           const csId = cls.classSectionId || '';
@@ -1433,19 +1461,26 @@
       toggle.textContent = el.classList.contains('collapsed') ? '▶' : '▼';
     }
 
-    // ===== QUICK ADD =====
+    // ===== HOLD EDITOR =====
     let quickAddRiders = [];
     function setupQuickAdd(showId, existingIds, allRiders) {
-      quickAddRiders = allRiders.filter(r => !existingIds.has(r.id));
+      quickAddRiders = allRiders;
       addRiders = quickAddRiders;
-      addRiderSelections = {};
+      addRiderSelections = buildEditableSelections(allRiders, currentListData?.selections, currentListData?.riderIds || []);
       const search = document.getElementById('quick-add-search');
       const results = document.getElementById('quick-add-results');
       const render = () => {
         const f = search.value.toLowerCase().trim();
         results.innerHTML = '';
-        if (!f) return;
-        const matches = quickAddRiders.filter(r => r.name.toLowerCase().includes(f) || (r.club || '').toLowerCase().includes(f)).slice(0, 10);
+        const matches = quickAddRiders
+          .filter(r => !f || r.name.toLowerCase().includes(f) || (r.club || '').toLowerCase().includes(f))
+          .sort((a, b) => {
+            const aSelected = !!addRiderSelections[a.id];
+            const bSelected = !!addRiderSelections[b.id];
+            if (aSelected !== bSelected) return aSelected ? -1 : 1;
+            return a.name.localeCompare(b.name, 'da');
+          });
+
         for (const r of matches) {
           const li = document.createElement('li');
           li.className = 'rider-tree-item';
@@ -1457,36 +1492,62 @@
           riderSelections = origSel; currentRiders = origRiders;
           results.appendChild(li);
         }
+
         if (!matches.length) results.innerHTML = '<div style="color:var(--text3); font-size:0.85rem; padding:8px 0;">Ingen ryttere fundet</div>';
+        showUpdateBtn();
       };
       results.innerHTML = '';
       search.oninput = render;
       render();
     }
 
+    function buildEditableSelections(riders, selections, riderIds) {
+      const map = {};
+      const idSet = new Set((riderIds || []).map(Number));
+      for (const rider of riders) {
+        const riderId = String(rider.id);
+        const saved = selections ? selections[riderId] : undefined;
+        if (!idSet.has(rider.id) && saved === undefined) continue;
+        map[rider.id] = {};
+        const horses = getRiderHorses(rider);
+        if (saved === 'all' || saved === undefined) {
+          for (const [horseName, entries] of Object.entries(horses)) {
+            map[rider.id][horseName] = new Set(entries.map(e => getEntrySelectionKey(e)));
+          }
+          continue;
+        }
+        for (const [horseName, mode] of Object.entries(saved || {})) {
+          const entries = (horses[horseName] || []);
+          map[rider.id][horseName] = mode === 'all'
+            ? new Set(entries.map(e => getEntrySelectionKey(e)))
+            : new Set(entries.filter(e => (mode || []).includes(e.classSectionId)).map(e => getEntrySelectionKey(e)));
+        }
+        if (!Object.keys(map[rider.id]).length) delete map[rider.id];
+      }
+      return map;
+    }
+
     async function applyQuickAddSelections() {
       if (!currentListData) return;
       const selectedIds = Object.keys(addRiderSelections).map(Number);
-      if (!selectedIds.length) return;
-      const riderCount = (currentListData.riderIds || []).length;
-      if (currentUser && currentUser.plan !== 'pro' && (riderCount + selectedIds.length) > 3) {
+      if (!selectedIds.length) {
+        showToast('Vælg mindst én rytter', 2000);
+        return;
+      }
+      if (currentUser && currentUser.plan !== 'pro' && selectedIds.length > 3) {
         document.getElementById('limit-modal').style.display = 'flex';
         return;
       }
-      const newIds = [...new Set([...(currentListData.riderIds || []), ...selectedIds])];
-      const newSelections = currentListData.selections ? { ...currentListData.selections } : {};
-      for (const [riderId, horses] of Object.entries(addRiderSelections)) {
-        newSelections[riderId] = {};
-        for (const [horseName, csIds] of Object.entries(horses)) {
-          newSelections[riderId][horseName] = Array.from(csIds);
-        }
-      }
+      const origSel = riderSelections, origRiders = currentRiders;
+      riderSelections = addRiderSelections; currentRiders = addRiders;
+      const newSelections = getSelectionsPayload();
+      riderSelections = origSel; currentRiders = origRiders;
       try {
         await fetch(`/api/lists/${currentListId}/riders`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ riderIds: newIds, selections: newSelections })
+          body: JSON.stringify({ riderIds: selectedIds, selections: newSelections })
         });
-        showToast('✓ Ryttere tilføjet', 2500);
+        showToast('✓ Hold opdateret', 2500);
         await viewList(currentListId);
       } catch (err) { alert('Fejl: ' + err.message); }
     }
@@ -1494,36 +1555,20 @@
     // ===== SELECTED RIDERS =====
     function renderSelectedRiders(riders, riderIdSet) {
       const container = document.getElementById('selected-riders-list');
-      if (!container) return;
-      if (!riderIdSet.size) { container.innerHTML = '<p style="color:#86868b; font-size:0.85rem;">Ingen ryttere valgt</p>'; return; }
-      const selections = currentListData.selections;
-      const selected = riders.filter(r => riderIdSet.has(r.id));
-      container.innerHTML = selected.map(r => {
-        const sel = selections ? selections[String(r.id)] : 'all';
-        let detail = '';
-        if (sel && sel !== 'all' && typeof sel === 'object') {
-          detail = ' <span style="color:var(--text3); font-size:0.78rem;">(' + Object.keys(sel).join(', ') + ')</span>';
-        }
-        return `<span class="chip">${r.name}${detail} <span class="chip-remove" onclick="removeRiderFromList(${r.id})">&times;</span></span>`;
-      }).join('');
+      if (container) container.innerHTML = '';
     }
 
     async function removeRiderFromList(riderId) {
-      if (!currentListData) return;
-      const newIds = currentListData.riderIds.filter(id => id !== riderId);
-      const newSelections = currentListData.selections ? { ...currentListData.selections } : null;
-      if (newSelections) delete newSelections[String(riderId)];
-      try {
-        await fetch(`/api/lists/${currentListId}/riders`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ riderIds: newIds, selections: newSelections })
-        });
-        await viewList(currentListId);
-      } catch (err) { alert('Fejl: ' + err.message); }
+      if (!currentListData || !addRiderSelections[riderId]) return;
+      delete addRiderSelections[riderId];
+      const search = document.getElementById('quick-add-search');
+      if (search) search.dispatchEvent(new Event('input'));
+      showUpdateBtn();
     }
 
     // ===== PRO MODAL =====
     function showProModal() {
+      if (currentUser?.plan === 'pro') return;
       document.getElementById('pro-modal').style.display = 'flex';
     }
     function closeProModal(e) {
@@ -1605,8 +1650,9 @@
       const btn = document.getElementById('quick-add-update-btn');
       if (!btn) return;
       const count = Object.keys(addRiderSelections).length;
-      btn.style.display = count ? 'block' : 'none';
-      btn.textContent = count ? `Tilføj ${count} valgt${count > 1 ? 'e ryttere' : ' rytter'}` : 'Tilføj valgte ryttere';
+      btn.style.display = 'block';
+      btn.textContent = count ? `Gem ændringer (${count} rytter${count > 1 ? 'e' : ''} valgt)` : 'Gem ændringer';
+      btn.disabled = count === 0;
     }
 
     // ===== SERVICE WORKER =====

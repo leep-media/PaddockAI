@@ -1050,11 +1050,16 @@ app.get('/api/lists', async (req, res) => {
       
       const allLists = await getConvex().query(api.lists.getAll, {});
       
-      // LOGGING FOR DEBUGGING
       console.log(`[API] DEBUG: ownerId=${ownerId}, email=${email}. Total Convex lists=${allLists.length}`);
 
-      // FORCE RETURN ALL FOR NOW TO TEST
-      const lists = allLists;
+      // Filter logic:
+      // 1. If we have a userId, show lists owned by them.
+      // 2. ALSO show lists with NO userId (migrated/legacy lists).
+      const lists = allLists.filter(l => {
+        if (ownerId && l.userId === ownerId) return true;
+        if (!l.userId) return true;
+        return false;
+      });
 
       console.log(`[API] Returning ${lists.length} lists total.`);
 

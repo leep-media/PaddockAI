@@ -409,3 +409,110 @@ input:focus { border-color: rgba(255,255,255,0.2); }
   padding: 0;
 }
 .full-startlist-summary { display: none !important; }
+
+/* ═══ DROPDOWN / LIST STYLING ═══ */
+.dropdown-list {
+  list-style: none;
+  background: #1c1c1c;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-top: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  position: absolute;
+  width: 100%;
+  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.dropdown-list li {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+.dropdown-list li:hover { background: #252525; }
+.dd-name { font-weight: 700; color: #fff; font-size: 0.95rem; }
+.dd-meta { font-size: 0.8rem; color: #888; margin-top: 2px; }
+.dd-empty { padding: 20px; text-align: center; color: #555; }
+
+/* ═══ RIDER TREE / CHECKBOXES ═══ */
+.rider-list { list-style: none; margin-top: 16px; }
+.rider-tree-item {
+  background: #252525;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.rider-row, .horse-row, .class-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  cursor: pointer;
+}
+.rider-row:hover, .horse-row:hover, .class-row:hover { background: rgba(255,255,255,0.03); }
+.horse-row { padding-left: 36px; border-top: 1px solid rgba(255,255,255,0.02); }
+.class-row { padding-left: 60px; border-top: 1px solid rgba(255,255,255,0.01); }
+
+.tree-toggle { color: #666; font-size: 0.7rem; width: 14px; }
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #444;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.custom-checkbox.checked {
+  background: #fff;
+  border-color: #fff;
+  color: #000;
+}
+.custom-checkbox.partial {
+  background: #444;
+  border-color: #444;
+}
+
+.rider-name-label { font-weight: 700; flex: 1; font-size: 0.92rem; }
+.horse-name-label { font-weight: 600; flex: 1; font-size: 0.88rem; color: #ccc; }
+.class-name-label { flex: 1; font-size: 0.82rem; color: #aaa; }
+
+/* ═══ FORSIDE / HOLD LISTE ═══ */
+.list-item {
+  background: #252525;
+  border-radius: 16px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  transition: transform 0.1s;
+}
+.list-item:active { transform: scale(0.98); }
+.list-link {
+  flex: 1;
+  padding: 16px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.list-name { color: #fff; font-weight: 700; font-size: 1.05rem; }
+.list-meta { color: #888; font-size: 0.85rem; }
+.list-actions { padding: 0 16px; }
+.btn-delete-list {
+  background: rgba(232, 93, 93, 0.1);
+  color: #e85d5d;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}

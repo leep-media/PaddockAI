@@ -1065,7 +1065,7 @@ app.post('/api/lists', async (req, res) => {
         riderIds: riderIds || [],
         selections: selections || undefined,
       });
-      return res.json(list);
+      return res.json({ ...list, id: list._id });
     }
 
     // JSON fallback

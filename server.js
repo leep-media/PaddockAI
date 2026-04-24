@@ -1052,6 +1052,9 @@ app.get('/api/lists', async (req, res) => {
         const allLists = await getConvex().query(api.lists.getAll, {});
         lists = allLists.filter(l => !l.userId);
       }
+      if ((!lists || !lists.length) && email) {
+        return res.json([]);
+      }
       return res.json(lists.map(l => ({
         id: l._id,
         listName: l.listName || l.showName,
@@ -1065,16 +1068,22 @@ app.get('/api/lists', async (req, res) => {
 
     // JSON fallback
     const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'));
-    const lists = files.map(f => {
+    const allLists = files.map(f => {
       try { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), 'utf8')); } catch { return null; }
     })
-    .filter(l => l && l.id && l.showId && typeof l.showId === 'string')
-    .filter(l => {
+    .filter(l => l && l.id && l.showId && typeof l.showId === 'string');
+
+    let lists = allLists.filter(l => {
       if (userId && l.userId) return l.userId === userId;
-      if (email) return (l.email || '').toLowerCase() === email;
+      if (email && l.email) return (l.email || '').toLowerCase() === email;
       return false;
-    })
-    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    });
+
+    if (!lists.length && email) {
+      lists = allLists.filter(l => !l.userId && !l.email);
+    }
+
+    lists = lists.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     res.json(lists.map(l => ({ id: l.id, listName: l.listName || l.showName, showName: l.showName, startDate: l.startDate, endDate: l.endDate, riderCount: (l.riderIds || []).length, createdAt: l.createdAt })));
   } catch (err) {
     res.status(500).json({ error: err.message });

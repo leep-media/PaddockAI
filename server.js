@@ -21,11 +21,11 @@ try {
   ConvexHttpClient = null;
   api = null;
 }
-const CONVEX_URL = process.env.CONVEX_URL || '';
+const CONVEX_URL = process.env.CONVEX_URL || 'https://blessed-lemur-987.eu-west-1.convex.cloud';
 let convex = null;
 function getConvex() {
   if (!ConvexHttpClient || !api) return null;
-  if (!convex && CONVEX_URL) convex = new ConvexHttpClient(CONVEX_URL);
+  if (!convex) convex = new ConvexHttpClient(CONVEX_URL);
   return convex;
 }
 

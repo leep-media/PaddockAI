@@ -168,23 +168,31 @@
 
         <!-- Sub-page: Create/List -->
         <div id="sp-page-create" class="showplaner-page">
-          <section class="saved-lists-section">
-            <h2 class="section-title">Dine hold</h2>
-            <p class="section-subtitle">Her finder du de hold, du allerede har oprettet.</p>
-            <div id="saved-lists"></div>
-          </section>
-
-          <section class="showplaner-builder-card">
-            <h2 class="section-title">Opret nyt hold</h2>
-            <p class="section-subtitle">Vælg stævne, markér ryttere og opret dit hold.</p>
-
-            <div class="builder-section-head">
-              <span class="builder-step">01</span>
-              <div>
-                <h3 class="builder-title">Vælg disciplin og stævne</h3>
-                <p class="builder-subtitle">Start med at filtrere og vælge det rigtige stævne.</p>
+          <section class="planner-shell">
+            <div class="planner-panel planner-left">
+              <div class="planner-card planner-top-card">
+                <div class="planner-brand-row">
+                  <div class="planner-brand-badge">H</div>
+                  <div class="planner-brand-name">Showplanner</div>
+                  <div class="planner-brand-avatar">DL</div>
+                </div>
               </div>
-            </div>
+
+              <section class="saved-lists-section planner-card">
+                <h2 class="section-title">Dine hold</h2>
+                <p class="section-subtitle">Du har ikke oprettet nogen hold endnu. Start med at vælge et stævne nedenfor.</p>
+                <div id="saved-lists"></div>
+              </section>
+
+              <section class="showplaner-builder-card planner-card">
+                <div class="builder-section-head compact">
+                  <span class="builder-step">1</span>
+                  <div>
+                    <h3 class="builder-title">Vælg stævne</h3>
+                    <p class="builder-subtitle">Filtrér og find det rigtige stævne</p>
+                  </div>
+                  <div class="builder-step-meta">Trin 1 af 3</div>
+                </div>
 
             <div id="discipline-filter" class="discipline-filter">
               <button class="disc-btn active" data-discipline="all" onclick="setDiscipline('all')">Alle</button>
@@ -194,7 +202,7 @@
             </div>
 
             <div id="show-search-wrapper" class="show-search-shell">
-              <input type="search" id="show-search" placeholder="🔍 Søg stævne..." autocomplete="off">
+              <input type="search" id="show-search" placeholder="🔍 Søg blandt stævner..." autocomplete="off">
               <ul class="dropdown-list" id="show-dropdown" style="display:none;"></ul>
             </div>
             <input type="hidden" id="show-select-value" value="">
@@ -202,13 +210,44 @@
               <span class="chip chip-show" id="show-chip-inner"></span>
             </div>
 
+            <div class="planner-suggestions">
+              <div class="planner-suggestions-label">Foreslået · denne uge</div>
+              <div class="planner-suggestion-list" id="planner-suggestion-list">
+                <div class="planner-suggestion-item is-live">
+                  <div class="planner-suggestion-accent"></div>
+                  <div class="planner-suggestion-main">
+                    <div class="planner-suggestion-name">Kolding Rideklub</div>
+                    <div class="planner-suggestion-meta">Spring · denne uge</div>
+                  </div>
+                  <div class="planner-suggestion-status">I gang</div>
+                </div>
+                <div class="planner-suggestion-item">
+                  <div class="planner-suggestion-accent alt"></div>
+                  <div class="planner-suggestion-main">
+                    <div class="planner-suggestion-name">Vejle Rideklub</div>
+                    <div class="planner-suggestion-meta">Dressur · søndag</div>
+                  </div>
+                  <div class="planner-suggestion-status muted">Søn</div>
+                </div>
+                <div class="planner-suggestion-item">
+                  <div class="planner-suggestion-accent warm"></div>
+                  <div class="planner-suggestion-main">
+                    <div class="planner-suggestion-name">Herning Militaryklub</div>
+                    <div class="planner-suggestion-meta">Military · næste uge</div>
+                  </div>
+                  <div class="planner-suggestion-status muted">Snart</div>
+                </div>
+              </div>
+            </div>
+
             <div id="riders-section" class="riders-builder" style="display:none;">
-              <div class="builder-section-head builder-section-head-tight">
-                <span class="builder-step">02</span>
+              <div class="builder-section-head builder-section-head-tight compact">
+                <span class="builder-step">2</span>
                 <div>
                   <h3 class="builder-title">Vælg ryttere</h3>
                   <p class="builder-subtitle">Sæt flueben ved ryttere, heste eller enkelte starter.</p>
                 </div>
+                <div class="builder-step-meta">Trin 2 af 3</div>
               </div>
               <input type="search" id="rider-search" placeholder="🔍 Søg rytter...">
               <input type="hidden" id="riders-loaded" value="">
@@ -231,6 +270,31 @@
             <span class="plan-info-text">Gratis plan: maks 3 ryttere per liste · 3 lister totalt</span>
             <button class="btn-upgrade-small" onclick="showProModal()">⭐ PRO</button>
           </div>
+            </div>
+
+            <div class="planner-panel planner-right">
+              <div class="planner-dashboard-card">
+                <div class="planner-dashboard-head">
+                  <div class="planner-dashboard-title">PaddockAI</div>
+                  <div id="planner-live-indicator" class="planner-live-indicator">● Live</div>
+                </div>
+
+                <div class="next-up-box" id="next-up-box" style="display:none;">
+                  <div id="sync-indicator" class="sync-indicator" style="display:none;">Live</div>
+                  <div class="next-up-label">Næste start</div>
+                  <div class="next-up-rider" id="next-up-rider"></div>
+                  <div class="next-up-horse" id="next-up-horse"></div>
+                  <div class="next-up-class" id="next-up-class"></div>
+                  <div class="next-up-countdown" id="next-up-countdown"></div>
+                </div>
+
+                <div class="planner-timeline-head">
+                  <h3>Mine 3 næste ryttere</h3>
+                </div>
+                <div class="rider-timeline" id="rider-timeline"></div>
+              </div>
+            </div>
+          </section>
         </div>
 
         <!-- Sub-page: View/Dashboard -->
@@ -250,17 +314,6 @@
             </div>
           </div>
 
-          <div class="next-up-box" id="next-up-box" style="display:none;">
-            <div id="sync-indicator" class="sync-indicator" style="display:none;">Live</div>
-            <div class="next-up-label">Næste start</div>
-            <div class="next-up-rider" id="next-up-rider"></div>
-            <div class="next-up-horse" id="next-up-horse"></div>
-            <div class="next-up-class" id="next-up-class"></div>
-            <div class="next-up-countdown" id="next-up-countdown"></div>
-          </div>
-
-          <h3>Mine 3 næste ryttere</h3>
-          <div class="rider-timeline" id="rider-timeline"></div>
 
           <div class="quick-add-section" id="quick-add-section">
             <h3 style="margin:0 0 8px;">Holdets ryttere</h3>

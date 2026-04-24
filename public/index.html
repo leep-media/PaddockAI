@@ -207,10 +207,10 @@
             </div>
             <input type="hidden" id="show-select-value" value="">
             <div id="show-selected-chip" class="show-selected-chip" style="display:none;">
-              <span class="chip chip-show" id="show-chip-inner"></span>
+              <div id="show-chip-inner" class="planner-suggestion-item selected-show-card"></div>
             </div>
 
-            <div class="planner-suggestions">
+            <div id="planner-suggestions-box" class="planner-suggestions">
               <div class="planner-suggestions-label">Foreslået · denne uge</div>
               <div class="planner-suggestion-list" id="planner-suggestion-list">
                 <div class="planner-suggestion-item is-live" onclick="selectSuggestedShow('Kolding Rideklub', 'show_jumping')">
@@ -910,11 +910,25 @@
       document.getElementById('show-select-value').value = show.id;
       document.getElementById('show-search').value = '';
       document.getElementById('show-dropdown').style.display = 'none';
-      document.getElementById('show-chip-inner').innerHTML =
-        `${show.name} (${show.startDate}) <span class="chip-remove" onclick="clearShowSelection()">&times;</span>`;
+      
+      const disc = (show.disciplines && show.disciplines[0]) || show.discipline || 'show_jumping';
+      const discLabels = { show_jumping: 'Spring', dressage: 'Dressur', eventing: 'Military' };
+      const accentClass = disc === 'dressage' ? 'alt' : (disc === 'eventing' ? 'warm' : '');
+      
+      document.getElementById('show-chip-inner').innerHTML = `
+        <div class="planner-suggestion-accent ${accentClass}"></div>
+        <div class="planner-suggestion-main">
+          <div class="planner-suggestion-name">${escAttr(show.name)}</div>
+          <div class="planner-suggestion-meta">${discLabels[disc] || 'Stævne'} · ${show.startDate}</div>
+        </div>
+        <div class="planner-suggestion-status" style="color:var(--text3); cursor:pointer;" onclick="clearShowSelection()">Fjern</div>
+      `;
+      
       document.getElementById('show-selected-chip').style.display = 'block';
       document.getElementById('show-search-wrapper').style.display = 'none';
       document.getElementById('discipline-filter').style.display = 'none';
+      document.getElementById('planner-suggestions-box').style.display = 'none';
+      
       currentRiders = [];
       riderSelections = {};
       document.getElementById('riders-section').style.display = 'block';
@@ -927,6 +941,7 @@
       document.getElementById('show-selected-chip').style.display = 'none';
       document.getElementById('show-search-wrapper').style.display = 'block';
       document.getElementById('discipline-filter').style.display = 'flex';
+      document.getElementById('planner-suggestions-box').style.display = 'block';
       document.getElementById('riders-section').style.display = 'none';
       currentRiders = []; riderSelections = {};
       expandedRiders.clear(); expandedHorses.clear();

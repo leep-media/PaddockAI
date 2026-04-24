@@ -549,3 +549,12 @@ input:focus { border-color: rgba(255,255,255,0.2); }
   color: var(--text3);
   font-size: 0.8rem;
 }
+
+/* ═══ SELECTED SHOW CARD ═══ */
+.show-selected-chip { margin: 14px 0 20px; }
+.selected-show-card {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  cursor: default !important;
+  margin-bottom: 0 !important;
+}

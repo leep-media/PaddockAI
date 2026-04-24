@@ -1334,13 +1334,13 @@
           <button class="btn-secondary edit-lists-btn ${editMode ? 'active' : ''}" onclick="toggleEditMode()">Rediger</button></div>`;
         for (const s of lists) {
           html += `<div class="list-item ${editMode ? 'show-delete' : ''}">
-            <div class="list-item-inner">
-              <a class="list-link" href="?list=${s.id}">
+            <div style="flex: 1; min-width: 0;">
+              <div class="list-link" onclick="viewList('${s.id}')" style="cursor:pointer;">
                 <div class="list-name">${s.listName || s.showName}</div>
                 <div class="list-meta"><span>${s.showName}</span> <span>${s.startDate} – ${s.endDate}</span> <span>${s.riderCount} ryttere</span></div>
-              </a>
+              </div>
             </div>
-            <button class="list-delete-btn" onclick="deleteList('${s.id}')">Slet</button>
+            ${editMode ? `<div class="list-actions"><button class="btn-delete-list" onclick="deleteList('${s.id}')">✕</button></div>` : ''}
           </div>`;
         }
         container.innerHTML = html;

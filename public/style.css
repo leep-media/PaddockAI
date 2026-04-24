@@ -436,27 +436,55 @@ input:focus { border-color: rgba(255,255,255,0.2); }
 .dd-meta { font-size: 0.8rem; color: #888; margin-top: 2px; }
 .dd-empty { padding: 20px; text-align: center; color: #555; }
 
-/* ═══ RIDER TREE / CHECKBOXES ═══ */
-.rider-list { list-style: none; margin-top: 16px; }
+.rider-list { list-style: none; margin-top: 16px; padding: 0; }
 .rider-tree-item {
-  background: #252525;
+  background: rgba(255,255,255,0.03);
   border-radius: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   border: 1px solid var(--border);
   overflow: hidden;
 }
-.rider-row, .horse-row, .class-row {
+.rider-tree-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px;
+  gap: 12px;
+  padding: 12px 14px;
   cursor: pointer;
+  user-select: none;
 }
-.rider-row:hover, .horse-row:hover, .class-row:hover { background: rgba(255,255,255,0.03); }
-.horse-row { padding-left: 36px; border-top: 1px solid rgba(255,255,255,0.02); }
-.class-row { padding-left: 60px; border-top: 1px solid rgba(255,255,255,0.01); }
+.rider-tree-row:hover { background: rgba(255,255,255,0.04); }
 
-.tree-toggle { color: #666; font-size: 0.7rem; width: 14px; }
+.rider-tree-children {
+  background: rgba(0,0,0,0.2);
+  display: none;
+}
+.rider-tree-children.open { display: block; }
+
+.horse-tree-row {
+  padding-left: 24px;
+  border-top: 1px solid rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.01);
+}
+.class-tree-row {
+  padding-left: 48px;
+  border-top: 1px solid rgba(255,255,255,0.02);
+}
+
+.tree-label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.rider-name-label { font-weight: 700; font-size: 0.95rem; color: #fff; }
+.rider-tree-meta { font-size: 0.78rem; color: var(--text3); margin-top: 2px; }
+
+.horse-name-label { font-weight: 600; font-size: 0.88rem; color: #eee; }
+.horse-tree-meta { font-size: 0.75rem; color: var(--text3); }
+
+.class-name-label { font-size: 0.82rem; color: #bbb; line-height: 1.4; }
+.tree-class-time { font-weight: 700; color: #888; margin-right: 4px; }
+
 .custom-checkbox {
   width: 20px;
   height: 20px;
@@ -466,8 +494,11 @@ input:focus { border-color: rgba(255,255,255,0.2); }
   align-items: center;
   justify-content: center;
   font-size: 0.8rem;
-  transition: all 0.2s;
+  font-weight: 800;
+  transition: all 0.15s;
   flex-shrink: 0;
+  background: transparent;
+  color: transparent;
 }
 .custom-checkbox.checked {
   background: #fff;
@@ -477,11 +508,15 @@ input:focus { border-color: rgba(255,255,255,0.2); }
 .custom-checkbox.partial {
   background: #444;
   border-color: #444;
+  color: #fff;
 }
 
-.rider-name-label { font-weight: 700; flex: 1; font-size: 0.92rem; }
-.horse-name-label { font-weight: 600; flex: 1; font-size: 0.88rem; color: #ccc; }
-.class-name-label { flex: 1; font-size: 0.82rem; color: #aaa; }
+.rider-tree-toggle {
+  font-size: 0.7rem;
+  color: #666;
+  transition: transform 0.2s;
+}
+.rider-tree-toggle.open { transform: rotate(90deg); }
 
 /* ═══ FORSIDE / HOLD LISTE ═══ */
 .list-item {
